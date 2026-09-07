@@ -9,6 +9,7 @@ User=joe
 WorkingDirectory=/home/joe/birdart
 Environment=PATH=/home/joe/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=HOME=/home/joe
+EnvironmentFile=-/home/joe/birdart/state/joebird.env
 ExecStart=/home/joe/.local/bin/uv run python -m birdart.overlay
 SuccessExitStatus=143 SIGTERM
 Restart=always

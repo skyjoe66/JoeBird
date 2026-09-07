@@ -18,7 +18,7 @@ Environment=BIRDART_STYLE=generated
 # The API key lives here so it never appears in `systemctl cat` or `ps`.
 # "-" means the unit still starts if the file is absent; generation then fails
 # with a clear message instead of the service refusing to run.
-EnvironmentFile=-/home/joe/birdart/state/openai.env
+EnvironmentFile=-/home/joe/birdart/state/joebird.env
 ExecStart=/home/joe/.local/bin/uv run python -m birdart.watcher
 SuccessExitStatus=143 SIGTERM
 Restart=always

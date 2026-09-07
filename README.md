@@ -88,9 +88,9 @@ Assumes a working Fugleramme on the same machine.
 git clone https://github.com/skyjoe66/JoeBird.git ~/birdart
 cd ~/birdart && uv sync
 
-# only if generating artwork rather than sourcing it
-install -m 600 deploy/openai.env.example state/openai.env
-$EDITOR state/openai.env          # put your real key in
+cp .env.example state/joebird.env
+chmod 600 state/joebird.env
+$EDITOR state/joebird.env         # API key if generating; every setting is documented there
 
 sudo cp deploy/birdart-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -106,7 +106,9 @@ as needs passwordless sudo for that one command.
 
 ### Settings
 
-Environment, set on the watcher unit:
+`.env.example` documents every variable with its default; copy it to
+`state/joebird.env`, which both units read. The ones you are most likely to
+change:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
