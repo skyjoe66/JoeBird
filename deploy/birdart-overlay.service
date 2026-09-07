@@ -1,0 +1,18 @@
+[Unit]
+Description=birdart overlay (adds the search banner in front of the Fugleramme frame)
+After=network-online.target fugleramme-frame.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=joe
+WorkingDirectory=/home/joe/birdart
+Environment=PATH=/home/joe/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/joe
+ExecStart=/home/joe/.local/bin/uv run python -m birdart.overlay
+SuccessExitStatus=143 SIGTERM
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

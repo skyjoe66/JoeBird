@@ -1,0 +1,20 @@
+# Secrets. openai.env holds the API key - it must never be committed.
+state/openai.env
+*.env
+!*.env.example
+
+# Per-machine runtime state: what has been tried, what is being fetched now,
+# and the lock. Meaningless on anyone else's Pi.
+state/
+!state/.gitkeep
+
+# Downloaded plates and intermediate cut-outs. Large, regenerable, and some are
+# other people's scans - they belong on the machine that fetched them.
+work/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
