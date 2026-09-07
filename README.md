@@ -121,6 +121,10 @@ change:
 
 ## Licensing
 
-Only public-domain and CC0 files are accepted. Each installed image records the
-exact Commons file page in Fugleramme's `manifest.json`, and the `commons` source
-is described in the style's `ATTRIBUTION.md`.
+**The code** in this repository is MIT - see [LICENSE](LICENSE). That covers the
+bot, not the pictures it installs: an Audubon scan and a generated plate each
+carry their own terms, and MIT says nothing about either.
+
+**The artwork.** Only public-domain and CC0 files are accepted. Each installed
+image records the exact Commons file page in Fugleramme's `manifest.json`, and
+the `commons` source is described in the style's `ATTRIBUTION.md`.
