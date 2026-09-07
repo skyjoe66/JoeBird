@@ -23,21 +23,22 @@ def _log(msg: str) -> None:
     print(f"{time.strftime('%H:%M:%S')} {msg}", flush=True)
 
 
-# BirdNET-Go serves a stale cached page for large limits: at limit=200 it kept
-# returning 12 detections and omitting the newest species, while limit<=150 gave
-# the current 13. Staying well under that keeps the watcher honest, and 100
-# recent detections is far more history than "what has been heard lately" needs.
+# /api/v2/detections is paginated and cached, and the cache goes stale: at
+# limit=100 it served a page whose newest row was a day old while a Bald Eagle
+# heard minutes earlier was missing from it. /api/v2/detections/recent is what
+# the frame itself reads, is not cached, and answers with the newest first.
 DETECTION_LIMIT = 100
 
 
 def heard_species(limit: int = DETECTION_LIMIT) -> list[dict]:
     """Distinct species in the detector's recent history, newest first."""
-    url = urljoin(DETECTOR + "/", f"api/v2/detections?limit={limit}")
+    url = urljoin(DETECTOR + "/", f"api/v2/detections/recent?limit={limit}")
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=20) as r:
         data = json.load(r)
+    rows = data if isinstance(data, list) else data.get("data", [])
     out: dict[str, dict] = {}
-    for d in data.get("data", []):
+    for d in rows:
         sci = (d.get("scientificName") or "").strip()
         if sci and sci not in out:
             out[sci] = {"scientific": sci, "common": d.get("commonName") or sci}
