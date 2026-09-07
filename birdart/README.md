@@ -91,12 +91,12 @@ cp .env.example state/joebird.env
 chmod 600 state/joebird.env
 $EDITOR state/joebird.env         # API key if generating; every setting is documented there
 
-sudo cp deploy/birdart-*.service /etc/systemd/system/
+sudo cp ../deploy/birdart-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now birdart-overlay birdart-watcher
 ```
 
-To put the banner in front of the frame, merge `deploy/apache-fugleramme.conf`
+To put the banner in front of the frame, merge `../deploy/apache-fugleramme.conf`
 into your vhost: it sends `/state` and `/collage.png` to the overlay on 8081 and
 everything else straight to the frame on 8080.
 

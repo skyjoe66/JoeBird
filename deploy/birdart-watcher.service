@@ -13,7 +13,7 @@ User=USER
 WorkingDirectory=/PATH/TO/fugleramme/birdart
 Environment=PATH=/PATH/TO/home/.local/bin:/usr/local/bin:/usr/bin:/bin
 # The shared library is tried first, then generation with your own OpenAI
-# key, into the fork's single library/. See ../.env.example for the settings.
+# key, into the fork's single library/. See birdart/.env.example for the settings.
 Environment=BIRDART_POLL=8
 # The API key lives in a file so it never appears in `systemctl cat` or `ps`.
 # "-" means the unit still starts if a file is absent; generation then fails
