@@ -19,9 +19,12 @@ through `tools/add_bird.py`, which records it in `manifest.json`.
 - **Provenance is nil.** There is no plate, no engraver, no holding institution,
   and `manifest.json` carries no source link for these files - only the source
   key pointing here.
-- **Licensing is unsettled.** The copyright status of AI-generated images varies
-  by jurisdiction and is unresolved in several. Do not redistribute this folder
-  as though it carried the clear terms of a public-domain plate.
+- **Licensing: CC0.** To whatever extent the owner of the key that produced
+  these images holds rights in them - which varies by jurisdiction and is
+  unresolved in several - those rights are waived under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/); the full text
+  is in `LICENSE` beside this file. Use them for anything, no credit required.
+  This is a waiver, not a warranty: nobody can grant more than they hold.
 
 ## Sources
 

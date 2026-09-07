@@ -1,46 +1,36 @@
-# fugleramme
-E-ink bird frame for Raspberry Pi - real-time bird detection by audio.
+# JoeBird
 
-<p align="center">
-  <img src="docs/assets/hero.jpg" width="520"
-       alt="The frame on a kitchen windowsill showing six birds heard in the garden, a window feeder on the glass behind it">
-  <br>
-  <em>Sorry about the dirty window - squirrels have been stealing the bird food.</em>
-</p>
+A bird picture frame that draws every bird it hears. BirdNET-Go listens through
+a microphone; the frame renders the species it identifies as nineteenth-century
+natural-history plates on an e-ink panel or any screen; and for any bird it has
+no picture of, JoeBird makes one - fetched from a shared library if another
+frame already drew it, generated with your own OpenAI API key if not.
 
-> [!NOTE]
-> Still in early development: expect the odd bug and a few unpolished edges, with plenty more features to come.
+> Built on **[Fugleramme](https://github.com/arnegiacomo/fugleramme)** by
+> Arne Giacomo Munthe-Kaas, which is the frame, the renderer, the admin page
+> and the install - all of `src/`, `docs/`, `install.sh` and `run.sh` are his
+> work, MIT licensed, and this repository stays a fork of it so his fixes keep
+> flowing in. What JoeBird adds is below; everything after **How it works** is
+> his README, kept as he wrote it.
 
-Built on top of [BirdNET-Go](https://github.com/tphakala/birdnet-go), which handles
-the mic, the BirdNET classifier and the detection settings. Fugleramme reads
-the detections and renders recently-seen birds on an [Inky-Impression](https://shop.pimoroni.com/products/inky-impression) e-ink panel.
+## What JoeBird changes
 
-> [!TIP]
-> The e-ink panel is not required, although it's recommended for the intended experience. Without one, Fugleramme runs web-only - show the
-> kiosk on a display over HDMI, or open it from any device on the network.
-
-Live on **[fugleramme.arnegiacomo.dev](https://fugleramme.arnegiacomo.dev)** running from my kitchen window and displaying the actual birds currently heard in my garden (Bergen, Norway).
-
-Hardware, install and operations docs: **[arnegiacomo.dev/fugleramme](https://arnegiacomo.dev/fugleramme/)**
-
-## This fork
-
-[arnegiacomo/fugleramme](https://github.com/arnegiacomo/fugleramme) ships
-artwork for Northern Europe, drawn one style at a time. This fork is for
-everywhere else, and it changes two things:
-
-- **One library, no picker, all of it generated.** Upstream's styles and
-  hand-cut plates are gone; `assets/artwork/library/` holds only what the bot
-  has drawn, so every bird on the glass matches every other. With one folder
-  there is nothing to choose, and the admin's style row is left out.
+- **Every picture is generated, and they all match.** Upstream ships hand-cut
+  historical plates for Northern Europe, in styles you pick between. JoeBird
+  ships none of that: `assets/artwork/library/` holds only what the bot has
+  drawn, in one consistent style, so nothing on the glass looks pasted on. One
+  folder, so there is no style to choose and the admin's style row is gone.
 - **Birds it cannot draw get drawn.** [`birdart/`](birdart/) watches
-  BirdNET-Go, and for any species with no plate in the library it generates one
-  in the style of a 19th-century natural-history engraving using **your own
-  OpenAI API key**, cuts it out, checks it, and installs it. Synthetic images
-  are marked as such in `manifest.json` and in
+  BirdNET-Go. For a species with no plate it first asks the
+  [shared library](https://github.com/skyjoe66/joebird-library) - plates other
+  frames have already generated, fetched and hash-checked, no token spent - and
+  only then generates one, cuts it out, has it checked, and installs it. The
+  frame shows *Building Image of Current Species* while that happens.
+- **CC0.** The generated plates are dedicated to the public domain; see
   [`library/ATTRIBUTION.md`](assets/artwork/library/ATTRIBUTION.md).
 
-Everything below is upstream's README, unchanged.
+Run it exactly as upstream's install below describes, then follow
+[`birdart/README.md`](birdart/README.md) to start the bot with your key.
 
 ## How it works
 

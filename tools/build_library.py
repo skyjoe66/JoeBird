@@ -110,9 +110,9 @@ def _assemble(sources: list[Path], out: Path) -> dict[str, int]:
                 continue
             seen[digest] = f.name
             shutil.copy2(f, out / PERCHES / f.name)
-            entry = _manifest(style).get(f"{PERCHES}/{f.name}")
-            if entry:
-                manifest[f"{PERCHES}/{f.name}"] = dict(entry)
+            perch = _manifest(style).get(f"{PERCHES}/{f.name}")
+            if perch:
+                manifest[f"{PERCHES}/{f.name}"] = dict(perch)
 
     (out / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 

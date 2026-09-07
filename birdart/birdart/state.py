@@ -31,6 +31,7 @@ def _read(path: Path, default: dict) -> dict:
 
 # ---------------------------------------------------------------- status
 
+
 def read_status() -> dict:
     return _read(STATUS_FILE, {"active": None, "queue": [], "updated": 0})
 
@@ -48,12 +49,12 @@ def clear_status() -> None:
 
 # ---------------------------------------------------------------- ledger
 
+
 def read_ledger() -> dict:
     return _read(LEDGER_FILE, {})
 
 
-def note(scientific: str, status: str, why: str = "", common: str = "",
-         source: str = "") -> dict:
+def note(scientific: str, status: str, why: str = "", common: str = "", source: str = "") -> dict:
     """Record an outcome. `attempts` only grows, so a species that keeps failing
     eventually parks itself instead of blocking the queue forever."""
     led = read_ledger()
@@ -62,9 +63,8 @@ def note(scientific: str, status: str, why: str = "", common: str = "",
     entry["status"] = status
     entry["why"] = why
     entry["common"] = common or entry.get("common", "")
-    # Which backend produced this outcome. A species Commons could not serve
-    # deserves a fresh start when the artwork is generated instead - the two
-    # fail for completely different reasons.
+    # Which backend produced this outcome. Kept so a ledger written by the old
+    # Commons hunt is recognised and its failures forgiven; see watcher.parked.
     entry["source"] = source or entry.get("source", "")
     entry["last"] = time.time()
     led[scientific] = entry

@@ -43,7 +43,7 @@ def artwork_dir(style: str | None = None) -> Path:
 
 
 def key_for(scientific_name: str) -> str:
-    """"Turdus merula" -> "turdus-merula", matching names.normalize upstream."""
+    """ "Turdus merula" -> "turdus-merula", matching names.normalize upstream."""
     return scientific_name.strip().lower().replace(" ", "-")
 
 

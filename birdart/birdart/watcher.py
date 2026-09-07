@@ -1,8 +1,8 @@
 """The daemon: watch what BirdNET-Go hears, acquire what we cannot draw.
 
-Deliberately serial. One acquisition at a time keeps Commons happy, keeps the
-"Image Search Underway" banner honest about which bird it means, and means a
-runaway search can be stopped by stopping one service.
+Deliberately serial. One acquisition at a time keeps the spend predictable,
+keeps the "Building Image of Current Species" banner honest about which bird
+it means, and means a runaway queue can be stopped by stopping one service.
 """
 
 from __future__ import annotations
@@ -13,9 +13,8 @@ import urllib.request
 from urllib.parse import urljoin
 
 from . import state
-from .acquire import CONFIG_ERROR, SOURCE, acquire
+from .acquire import CONFIG_ERROR, acquire
 from .config import DETECTOR, MAX_ATTEMPTS, POLL_SECONDS, USER_AGENT, has_artwork
-
 
 _last_hold: str | None = None
 
@@ -46,18 +45,13 @@ def heard_species(limit: int = DETECTION_LIMIT) -> list[dict]:
 
 
 def parked(ledger: dict, scientific: str) -> bool:
-    """Given up on, for the backend currently in use.
-
-    Failures are recorded against the source that produced them, so switching
-    from hunting Commons to generating plates re-opens everything the hunt could
-    not find. Entries written before sources were tracked are Commons failures
-    by definition - it was the only backend that existed - so they are treated
-    as such rather than as failures of whatever runs now.
-    """
+    """Given up on: failed MAX_ATTEMPTS times. Entries an older version wrote
+    against the Commons hunt do not count - that backend is gone, and a species
+    it could not find deserves a fresh start with generation."""
     e = ledger.get(scientific)
     if not e or e.get("status") == "done":
         return False
-    if (e.get("source") or "commons") != SOURCE:
+    if (e.get("source") or "commons") == "commons":
         return False
     return e.get("attempts", 0) >= MAX_ATTEMPTS
 
@@ -93,14 +87,14 @@ def tick() -> None:
         # intact rather than finding every species parked. Logged only when the
         # message changes, or a bad key would fill the journal one line per tick.
         global _last_hold
-        detail = why[len(CONFIG_ERROR):]
+        detail = why[len(CONFIG_ERROR) :]
         if detail != _last_hold:
             _log(f"holding: {detail}")
             _last_hold = detail
         state.clear_status()
         return
     entry = state.note(
-        active["scientific"], "done" if ok else "failed", why, active["common"], SOURCE
+        active["scientific"], "done" if ok else "failed", why, active["common"], "openai"
     )
     _log(("done: " if ok else "failed: ") + f"{active['common']}: {why}")
     if not ok and entry.get("attempts", 0) >= MAX_ATTEMPTS:

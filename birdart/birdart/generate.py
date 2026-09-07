@@ -104,9 +104,7 @@ def api_key() -> str:
                 return line.split("=", 1)[1].strip().strip("'\"")
     except OSError:
         pass
-    raise GenerateError(
-        f"no OPENAI_API_KEY in the environment or {KEY_FILE}"
-    )
+    raise GenerateError(f"no OPENAI_API_KEY in the environment or {KEY_FILE}")
 
 
 def _client():

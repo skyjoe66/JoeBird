@@ -42,23 +42,22 @@ curl -s http://birdnet/birdart/status | python3 -m json.tool
 
 ## How one acquisition works
 
-1. **Search** Wikimedia Commons, historical folios first (Audubon, Gould), and
-   keep only files Commons reports as public domain or CC0.
-2. **Verify and frame** with `claude -p`: the model opens the plate, confirms it
-   really shows that species - old plates use old names, and many are shared by
-   several species - and boxes the one bird best worth cutting.
-3. **Cut out**: the paper is removed by connectivity, not colour alone, so a
-   white wing patch is not punched out of the middle of the bird. Thin structure
-   (pine needles, grass) is opened away, the largest remaining blob is taken, and
-   an `#F0ECE5` halo is dilated behind it, matching `docs/adding-artwork.md`.
-4. **Gate**: a cut-out whose haloed silhouette fills more than 75% of its own
-   bounding box is a rectangle, not a bird. It is thrown away and the next plate
-   is tried. Cleanly cut birds sit near 50%.
+1. **Shared library first.** `index.json` from the public library repository is
+   checked for the species; a hit is downloaded, its sha256 verified, and it is
+   installed. No token spent.
+2. **Generate.** Otherwise OpenAI's image model is asked for a nineteenth-century
+   natural-history plate of the bird - one adult, side profile, engraved line and
+   watercolour on ivory paper - using your own API key.
+3. **Cut out.** The paper is removed by connectivity, not colour alone, so a
+   white wing patch is not punched out of the middle of the bird, and an
+   `#F0ECE5` halo is dilated behind it to match the frame's paper.
+4. **Gate.** A cut-out that is tiny, or nearly all halo, is thrown away. What
+   survives is flattened onto paper and shown to `claude -p`, which has to agree
+   it is that species, whole, with a properly formed head, before it is kept. A
+   rejected image costs one more attempt; two rejections and the species waits.
 5. **Install** through Fugleramme's own `tools/add_bird.py`, which assigns the
-   filename, the next variant number and the `manifest.json` entry.
-
-A species that fails three times is parked so one impossible bird cannot spin
-the queue. Clear its entry from `state/ledger.json` to try again.
+   filename, the next variant number and the `manifest.json` entry, then the
+   frame is restarted so it redraws.
 
 ## Why the overlay sits in front
 
@@ -112,7 +111,7 @@ change:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `BIRDART_SOURCE` | `openai` | `openai` generates a plate with your key, `commons` hunts a historical one |
+| `BIRDART_LIBRARY` | the public library | Shared library URL; empty disables |
 | `BIRDART_STYLE` | `library` | Folder under `assets/artwork/` to install into; the fork keeps just one |
 | `BIRDART_POLL` | `20` | Seconds between checks for newly heard species |
 | `BIRDART_MAX_ATTEMPTS` | `3` | Failures before a species is parked |
@@ -125,6 +124,6 @@ change:
 bot, not the pictures it installs: an Audubon scan and a generated plate each
 carry their own terms, and MIT says nothing about either.
 
-**The artwork.** Only public-domain and CC0 files are accepted. Each installed
-image records the exact Commons file page in Fugleramme's `manifest.json`, and
-the `commons` source is described in the style's `ATTRIBUTION.md`.
+**The artwork.** Everything the bot installs is AI-generated and dedicated to
+the public domain under CC0; the library's `ATTRIBUTION.md` and `LICENSE` say
+so, and `manifest.json` records where each file came from.

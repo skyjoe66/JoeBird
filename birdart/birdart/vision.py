@@ -8,13 +8,14 @@ is deterministic.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import subprocess
 
 from .config import CLAUDE_TIMEOUT
 
-_FENCE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.S)
+_FENCE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.DOTALL)
 
 
 def _run(prompt: str, timeout: int = CLAUDE_TIMEOUT) -> str:
@@ -25,6 +26,7 @@ def _run(prompt: str, timeout: int = CLAUDE_TIMEOUT) -> str:
             capture_output=True,
             text=True,
             timeout=timeout,
+            check=False,
         )
     except subprocess.TimeoutExpired:
         return ""
@@ -36,11 +38,9 @@ def _json(text: str) -> dict | None:
     if not text:
         return None
     cleaned = _FENCE.sub("", text).strip()
-    try:
+    with contextlib.suppress(ValueError):
         return json.loads(cleaned)
-    except Exception:
-        pass
-    m = re.search(r"\{.*\}", cleaned, re.S)
+    m = re.search(r"\{.*\}", cleaned, re.DOTALL)
     if not m:
         return None
     try:
@@ -83,52 +83,3 @@ def verify_cutout(path: str, scientific: str, common: str) -> bool | None:
     if not isinstance(data, dict) or "good" not in data:
         return None
     return bool(data["good"])
-
-
-def inspect_plate(path: str, scientific: str, common: str) -> dict | None:
-    """Verify the plate shows this species and bound the one bird to cut.
-
-    Returns {"ok", "x0", "y0", "x1", "y1", "why"} or None if the model could not
-    be reached. `ok=False` means "wrong species or unusable", and the caller
-    should move to the next candidate rather than cut something wrong.
-    """
-    prompt = (
-        f"Read the image at {path}.\n\n"
-        f"It should be a historical natural-history illustration of the bird "
-        f"{common} ({scientific}).\n\n"
-        "Decide two things:\n"
-        "1. Does this image actually depict that species, drawn or painted "
-        "(NOT a photograph, NOT a map, NOT a page of text, NOT a different "
-        "species)? Historical plates often use old names, so judge by the bird "
-        "itself.\n"
-        "2. If yes, pick the ONE individual of that species that is most "
-        "complete and least overlapped by other birds, and give a TIGHT "
-        "bounding box around that bird alone.\n\n"
-        "The box should hug the bird - include its tail and any perch directly "
-        "under its feet, but exclude surrounding foliage, pine needles, grass "
-        "and flowers wherever you can. A box full of vegetation cannot be cut "
-        "out and will be thrown away.\n\n"
-        "If the plate shows several species, be careful to box the correct one. "
-        "If you are not confident it is the right species, say ok=false.\n\n"
-        'Reply with ONLY a JSON object, no prose and no markdown fence:\n'
-        '{"ok":true|false,"x0":<float>,"y0":<float>,"x1":<float>,"y1":<float>,'
-        '"why":"<max 12 words>"}\n'
-        "Coordinates are fractions 0-1 of image width and height."
-    )
-    data = _json(_run(prompt))
-    if not isinstance(data, dict) or "ok" not in data:
-        return None
-    if not data.get("ok"):
-        return {"ok": False, "why": str(data.get("why", "rejected"))[:80]}
-    try:
-        box = {k: float(data[k]) for k in ("x0", "y0", "x1", "y1")}
-    except (KeyError, TypeError, ValueError):
-        return None
-    # A degenerate or inverted box would crop to nothing; treat as no answer.
-    if not (0 <= box["x0"] < box["x1"] <= 1 and 0 <= box["y0"] < box["y1"] <= 1):
-        return None
-    if (box["x1"] - box["x0"]) < 0.02 or (box["y1"] - box["y0"]) < 0.02:
-        return None
-    box["ok"] = True
-    box["why"] = str(data.get("why", ""))[:80]
-    return box

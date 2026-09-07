@@ -1,8 +1,9 @@
-"""Acquire one species: find a plate, verify it, cut it out, install it.
+"""Acquire one species: fetch it from the shared library if it is there, else
+generate it; cut it out, check it, install it.
 
-Each candidate plate is taken all the way through verification before the next
-is tried, so a wrong-species plate costs one model call rather than poisoning
-the style. Nothing is installed unless the cut-out survives every check.
+Nothing is installed unless the cut-out survives every check. Generation is the
+last resort, not the first: it costs money, and a plate another frame already
+paid for is one download away.
 """
 
 from __future__ import annotations
@@ -17,49 +18,44 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import commons, state, vision
+from . import library, state, vision
 from .config import FUGLERAMME, STATE, STYLE, WORK, key_for
 from .cutout import CutoutError, cut_file
 
-# Named in the style's ATTRIBUTION.md; a Commons file's exact plate lives in
-# manifest.json, while a generated one has no scan to point at.
-MAX_CANDIDATES = 6
 GENERATE_ATTEMPTS = int(os.environ.get("BIRDART_GENERATE_ATTEMPTS", "2"))
-# "openai" generates a plate with the owner's own API key - the point of this
-# fork; "commons" hunts Wikimedia for a public-domain one instead.
-SOURCE = os.environ.get("BIRDART_SOURCE", "openai").strip().lower()
-SOURCE_KEY = "generated" if SOURCE == "openai" else "commons"
 MODEL_NAME = os.environ.get("BIRDART_IMAGE_MODEL", "gpt-image-2")
+# Every image the bot installs is synthetic; this manifest key says so, and the
+# library's ATTRIBUTION.md is where it is explained.
+SOURCE_KEY = "generated"
 # Prefix marking a failure caused by the setup rather than by the species, so
 # the watcher can hold rather than burn that bird's attempts.
 CONFIG_ERROR = "config: "
-
-
-def _tighten(box: dict, frac: float) -> dict:
-    """Pull a box in towards its centre, trimming foliage the model left in."""
-    cx = (box["x0"] + box["x1"]) / 2
-    cy = (box["y0"] + box["y1"]) / 2
-    hw = (box["x1"] - box["x0"]) / 2 * (1 - frac)
-    hh = (box["y1"] - box["y0"]) / 2 * (1 - frac)
-    return {"x0": cx - hw, "y0": cy - hh, "x1": cx + hw, "y1": cy + hh}
 
 
 def _log(msg: str) -> None:
     print(msg, flush=True)
 
 
-def _install(png: Path, scientific: str, page_url: str) -> bool:
+def _install(png: Path, scientific: str, url: str) -> bool:
     """Hand the finished cut-out to the project's own importer."""
     cmd = [
-        "uv", "run", "--directory", str(FUGLERAMME),
-        "python", "tools/add_bird.py", str(png),
-        "--style", STYLE,
-        "--key", key_for(scientific),
-        "--source", SOURCE_KEY,
+        "uv",
+        "run",
+        "--directory",
+        str(FUGLERAMME),
+        "python",
+        "tools/add_bird.py",
+        str(png),
+        "--style",
+        STYLE,
+        "--key",
+        key_for(scientific),
+        "--source",
+        SOURCE_KEY,
     ]
-    if page_url:  # a generated plate has no scan to link
-        cmd += ["--url", page_url]
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    if url:  # a library file has an address worth recording; a fresh generation has none
+        cmd += ["--url", url]
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=600, check=False)
     if p.returncode != 0:
         _log(f"    add_bird failed: {(p.stderr or p.stdout).strip()[:200]}")
         return False
@@ -83,6 +79,7 @@ def _nudge_frame() -> None:
             capture_output=True,
             text=True,
             timeout=90,
+            check=False,
         )
         if r.returncode == 0:
             _log("    frame redrawn")
@@ -113,7 +110,7 @@ def _plausible(png: Path) -> bool:
             _log(f"    rejected: too small ({w}x{h})")
             return False
         alpha = im.getchannel("A")
-        opaque = sum(c for v, c in zip(range(256), alpha.histogram()) if v > 200)
+        opaque = sum(c for v, c in zip(range(256), alpha.histogram(), strict=True) if v > 200)
         if opaque / (w * h) < 0.05:
             _log("    rejected: almost nothing opaque")
             return False
@@ -125,9 +122,9 @@ def _only_one_at_a_time():
     """Serialise acquisitions across processes.
 
     The watcher runs continuously and a backfill is started by hand, so both can
-    be live at once. Two acquisitions in parallel double the load on Commons -
-    which already rate-limits us - and make the banner lie about which bird is
-    being fetched. Waiting is always better than racing here.
+    be live at once. Two generations in parallel double the spend for nothing
+    and make the banner lie about which bird it means. Waiting is always better
+    than racing here.
     """
     STATE.mkdir(parents=True, exist_ok=True)
     lock = STATE / "acquire.lock"
@@ -142,22 +139,38 @@ def _only_one_at_a_time():
 def acquire(scientific: str, common: str) -> tuple[bool, str]:
     """Returns (installed, reason)."""
     with _only_one_at_a_time():
-        return _acquire(scientific, common)
-
-
-def _acquire(scientific: str, common: str) -> tuple[bool, str]:
-    if SOURCE == "openai":
+        ok, why = _from_library(scientific, common)
+        if ok:
+            return True, why
         return _from_openai(scientific, common)
-    return _from_commons(scientific, common)
+
+
+def _from_library(scientific: str, common: str) -> tuple[bool, str]:
+    """A plate another frame already generated and shared. Already a finished
+    cut-out, so only the cheap sanity check stands between download and install;
+    the hash check in `library.fetch` is what makes trusting it reasonable."""
+    entries = library.lookup(scientific)
+    if not entries:
+        return False, "not in the shared library"
+    WORK.mkdir(parents=True, exist_ok=True)
+    png = WORK / f"{key_for(scientific)}-library.png"
+    for entry in entries:
+        _log(f"[{scientific}] fetching {entry['file']} from the shared library")
+        try:
+            url = library.fetch(entry, png)
+        except Exception as e:
+            _log(f"    fetch failed: {e}")
+            continue
+        if not _plausible(png):
+            continue
+        if _install(png, scientific, url):
+            return True, f"fetched from the shared library ({entry['file']})"
+    return False, "no library file could be used"
 
 
 def _from_openai(scientific: str, common: str) -> tuple[bool, str]:
-    """Generate the plate rather than hunting for one.
-
-    Same cut-out and same visual QA as a Commons plate - the only thing that
-    changes is where the picture came from. Each generation costs money, so the
-    retry budget is small and a rejected image is reported rather than looped.
-    """
+    """Generate the plate. Each generation costs money, so the retry budget is
+    small and a rejected image is reported rather than looped."""
     from .generate import GenerateError, generate
 
     WORK.mkdir(parents=True, exist_ok=True)
@@ -172,8 +185,8 @@ def _from_openai(scientific: str, common: str) -> tuple[bool, str]:
         except GenerateError as e:
             # A missing key, a dead credit balance or a refused model is a
             # problem with the setup, not with this bird. Marked so the watcher
-            # holds instead of spending the species' three attempts - otherwise
-            # one misconfiguration parks the entire queue in a couple of minutes.
+            # holds instead of spending the species' attempts - otherwise one
+            # misconfiguration parks the entire queue in a couple of minutes.
             return False, f"{CONFIG_ERROR}{e}"
         except Exception as e:
             return False, f"generation failed: {e}"
@@ -202,70 +215,6 @@ def _from_openai(scientific: str, common: str) -> tuple[bool, str]:
             return True, f"generated with {MODEL_NAME}"
 
     return False, f"no generated image passed inspection in {GENERATE_ATTEMPTS} attempts"
-
-
-def _from_commons(scientific: str, common: str) -> tuple[bool, str]:
-    WORK.mkdir(parents=True, exist_ok=True)
-    key = key_for(scientific)
-    _log(f"[{scientific}] searching Commons")
-    try:
-        cands = commons.candidates(scientific, common)
-    except Exception as e:
-        return False, f"commons search failed: {e}"
-    if not cands:
-        return False, "no public-domain candidates found"
-    _log(f"  {len(cands)} candidate plate(s)")
-
-    for i, c in enumerate(cands[:MAX_CANDIDATES], 1):
-        _log(f"  [{i}] {c['title'][:70]} ({c['width']}x{c['height']}, {c['licence']})")
-        raw = WORK / f"{key}-cand{i}{Path(c['url'].split('?')[0]).suffix or '.jpg'}"
-        try:
-            commons.download(c["url"], raw)
-        except Exception as e:
-            _log(f"    download failed: {e}")
-            continue
-
-        verdict = vision.inspect_plate(str(raw), scientific, common)
-        if verdict is None:
-            _log("    no usable answer from the model")
-            continue
-        if not verdict.get("ok"):
-            _log(f"    rejected by model: {verdict.get('why', '')}")
-            continue
-        _log(f"    accepted: {verdict.get('why', '')}")
-
-        png = WORK / f"{key}-cutout.png"
-        # A box that caught surrounding foliage fails the silhouette test. Rather
-        # than discard an otherwise correct plate, try again pulled in towards
-        # the bird - that is usually all that stands between a rectangle and a
-        # clean cut. Each variant is judged on its own merits, because a tighter
-        # box can just as easily cut the bird in half.
-        for attempt, box in enumerate((verdict, _tighten(verdict, 0.12), _tighten(verdict, 0.22))):
-            try:
-                cut_file(str(raw), str(png), box)
-            except CutoutError as e:
-                _log(f"    cutout {'retry ' if attempt else ''}failed: {e}")
-                continue
-            except Exception as e:
-                _log(f"    cutout error: {e}")
-                break
-            if not _plausible(png):
-                continue
-
-            preview = _preview(png)
-            good = vision.verify_cutout(str(preview), scientific, common)
-            if good is False:
-                _log(f"    cut-out rejected on inspection{' (box -%d%%)' % (12 * attempt) if attempt else ''}")
-                continue
-            if good is None:
-                _log("    could not inspect the cut-out; not installing blind")
-                continue
-            if attempt:
-                _log(f"    cut after tightening the box {attempt}x")
-            if _install(png, scientific, c.get("page") or c["url"]):
-                return True, c.get("page") or c["title"]
-
-    return False, "no candidate survived verification"
 
 
 def main() -> int:

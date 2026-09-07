@@ -11,20 +11,23 @@ the image when the token changes - would never notice it appear or disappear.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import io
 import json
+import logging
 import re
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from urllib.parse import parse_qs, unquote_plus, urljoin
 
 from PIL import Image, ImageDraw, ImageFont
 
 from . import labels, simulate, state
 from .config import FRAME, FUGLERAMME, OVERLAY_PORT, PAPER, STYLE, USER_AGENT, has_artwork
+
+log = logging.getLogger(__name__)
 
 # Kept here rather than in a template file so the service has no asset of its
 # own to lose track of; it is one page and it never leaves this process.
@@ -91,7 +94,7 @@ async function refresh(){
     const a=d.status&&d.status.active;
     const q=(d.status&&d.status.queue||[]).length;
     $('#live').textContent=a
-      ? 'Image Search Underway - '+(a.common||a.scientific)+(q?'  (+'+q+' more)':'')
+      ? 'Building Image of Current Species - '+(a.common||a.scientific)+(q?'  (+'+q+' more)':'')
       : 'Idle - showing whatever has been heard recently.';
     const led=d.ledger||{};
     const keys=Object.keys(led).sort((x,y)=>(led[y].last||0)-(led[x].last||0));
@@ -154,7 +157,8 @@ def _font(size: int, italic: bool = False) -> ImageFont.FreeTypeFont:
             font = ImageFont.truetype(str(p), size)
             _pin_weight(font)
             return font
-        except Exception:
+        except Exception as e:
+            log.debug("font %s unusable: %s", p, e)
             continue
     return ImageFont.load_default(size)
 
@@ -168,10 +172,8 @@ def _pin_weight(font: ImageFont.FreeTypeFont) -> None:
         return
     if not axes:
         return
-    try:
+    with contextlib.suppress(Exception):
         font.set_variation_by_axes([a.get("default", a.get("minimum", 400)) for a in axes])
-    except Exception:
-        pass
 
 
 def _fetch(path: str, timeout: int = 30) -> bytes:
@@ -203,8 +205,8 @@ def active_style() -> str:
         if m:
             _style_cache = (time.time(), m.group(1))
             return m.group(1)
-    except Exception:
-        pass
+    except Exception as e:
+        log.debug("could not read the frame's style: %s", e)
     return cached or STYLE
 
 
@@ -218,7 +220,7 @@ def banner_text() -> tuple[str, str] | None:
     subject = active.get("common") or active.get("scientific") or ""
     if queued:
         subject += f"   (+{queued} more)"
-    return "Image Search Underway", subject
+    return "Building Image of Current Species", subject
 
 
 def _draw_banner(png: bytes, headline: str, subject: str) -> bytes:
@@ -260,7 +262,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         path = self.path.split("?", 1)[0]
         try:
             if path == "/state":
@@ -282,7 +284,7 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             self._send(f"overlay error: {e}".encode(), "text/plain", 502)
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         path = self.path.split("?", 1)[0]
         if path != "/birdart/simulate":
             self._send(b"not found", "text/plain", 404)
@@ -324,8 +326,7 @@ class Handler(BaseHTTPRequestHandler):
         style = active_style()
         drawable = has_artwork(sci, style)
         tail = (
-            f"The {style} style already has a picture, so the frame will draw "
-            "it within seconds."
+            f"The {style} style already has a picture, so the frame will draw it within seconds."
             if drawable
             else f"The {style} style has no picture for it yet - one is "
             "generated within a minute or so, then it appears."
@@ -352,10 +353,9 @@ class Handler(BaseHTTPRequestHandler):
         png = _fetch("/collage.png", timeout=60)
         b = banner_text()
         if b:
-            try:
+            # A failed banner must never cost the user their picture.
+            with contextlib.suppress(Exception):
                 png = _draw_banner(png, *b)
-            except Exception:
-                pass  # a failed banner must never cost the user their picture
         self._send(png, "image/png")
 
 

@@ -18,7 +18,7 @@ import urllib.request
 from urllib.parse import urljoin
 
 from . import state
-from .acquire import SOURCE, acquire
+from .acquire import acquire
 from .config import DETECTOR, MAX_ATTEMPTS, USER_AGENT, has_artwork
 from .watcher import parked
 
@@ -75,14 +75,16 @@ def main() -> int:
             ok, why = acquire(s["scientific"], s["common"])
         except Exception as e:
             ok, why = False, f"unhandled: {e}"
-        state.note(s["scientific"], "done" if ok else "failed", why, s["common"], SOURCE)
+        state.note(s["scientific"], "done" if ok else "failed", why, s["common"], "openai")
         done, failed = done + bool(ok), failed + (not ok)
         _log(("  done" if ok else "  failed: ") + ("" if ok else why))
-        time.sleep(a.pause)  # Commons rate-limits a long run otherwise
+        time.sleep(a.pause)
 
     state.clear_status()
-    _log(f"backfill finished: {done} acquired, {failed} failed "
-         f"(failures retry up to {MAX_ATTEMPTS} times on later runs)")
+    _log(
+        f"backfill finished: {done} acquired, {failed} failed "
+        f"(failures retry up to {MAX_ATTEMPTS} times on later runs)"
+    )
     return 0
 
 

@@ -19,7 +19,7 @@ from scipy import ndimage
 from .config import HALO_PX, PAPER
 
 MAX_SIDE = 1600  # plates arrive far larger than the 1200px the frame keeps
-OPEN_ITERS = 2   # ~4px of thin structure removed: needles and grass, not legs
+OPEN_ITERS = 2  # ~4px of thin structure removed: needles and grass, not legs
 MAX_FILL = 0.75  # cleanly cut birds sit near 50%; foliage-bound ones exceed 90%
 TOLERANCES = (30, 42, 55, 70, 88)  # widened until the background actually lifts
 
@@ -100,9 +100,7 @@ def _halo_only(img: Image.Image, halo_px: int) -> Image.Image:
         keep = {i + 1 for i, s in enumerate(sizes) if s >= 0.02 * sizes.max()}
         fg = np.isin(flab, list(keep))
 
-    halo = ndimage.binary_dilation(
-        fg, ndimage.generate_binary_structure(2, 2), iterations=halo_px
-    )
+    halo = ndimage.binary_dilation(fg, ndimage.generate_binary_structure(2, 2), iterations=halo_px)
     out = np.zeros((*fg.shape, 4), dtype=np.uint8)
     out[halo] = (*PAPER, 255)
     out[fg, :3] = rgba[fg, :3]
@@ -172,8 +170,8 @@ def _attempt(a: np.ndarray, tol: int, halo_px: int) -> Image.Image:
         raise CutoutError(f"silhouette fills {fill:.0%} of its box - a rectangle, not a bird")
 
     out = np.zeros((*fg.shape, 4), dtype=np.uint8)
-    out[halo] = (*PAPER, 255)          # halo ring, opaque paper colour
-    out[fg, :3] = a[fg]                # the bird itself, original pixels
+    out[halo] = (*PAPER, 255)  # halo ring, opaque paper colour
+    out[fg, :3] = a[fg]  # the bird itself, original pixels
     out[fg, 3] = 255
 
     rgba = Image.fromarray(out, "RGBA")
