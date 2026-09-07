@@ -22,8 +22,12 @@ data/
 *.db-shm
 frame.png
 
-# Per-Pi detector config, generated from config.yaml.template by setup.sh
-detector/config/config.yaml
+# Per-Pi detector config and BirdNET-Go's runtime state. Only the template is
+# tracked - the rest is machine-specific, and the config (and any backup of it)
+# carries the web session secret and whatever passwords are configured, so it
+# must never be committed.
+detector/config/*
+!detector/config/config.yaml.template
 
 # Per-Pi container env (UID/GID/ALSA card), written by run.sh
 detector/.env
