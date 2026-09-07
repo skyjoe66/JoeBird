@@ -203,20 +203,39 @@ def _generate_gemini(common: str, dest: Path) -> Path:
     if not key:
         raise GenerateError("no Gemini API key - set one in the admin page's AI images section")
     model = settings.model()
+    prompt = _body(common) + _FLAT_PAPER
+    dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         client = genai.Client(api_key=key)
-        result = client.models.generate_images(
+        if model.startswith("imagen"):
+            # Imagen models have their own endpoint.
+            result = client.models.generate_images(
+                model=model,
+                prompt=prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=1, aspect_ratio="3:4", output_mime_type="image/png"
+                ),
+            )
+            images = getattr(result, "generated_images", None) or []
+            if not images or not getattr(images[0], "image", None):
+                raise GenerateError("no image returned")
+            dest.write_bytes(images[0].image.image_bytes)
+            return dest
+        # gemini-*-flash-image and friends answer through generate_content with an
+        # image part in the response.
+        result = client.models.generate_content(
             model=model,
-            prompt=_body(common) + _FLAT_PAPER,
-            config=types.GenerateImagesConfig(
-                number_of_images=1, aspect_ratio="3:4", output_mime_type="image/png"
-            ),
+            contents=prompt,
+            config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
         )
+        for cand in getattr(result, "candidates", None) or []:
+            for part in getattr(getattr(cand, "content", None), "parts", None) or []:
+                blob = getattr(part, "inline_data", None)
+                if blob is not None and getattr(blob, "data", None):
+                    dest.write_bytes(blob.data)
+                    return dest
+        raise GenerateError("no image part in the response")
+    except GenerateError:
+        raise
     except Exception as e:
         raise GenerateError(f"{model} refused: {str(e)[:200]}") from e
-    images = getattr(result, "generated_images", None) or []
-    if not images or not getattr(images[0], "image", None):
-        raise GenerateError("no image returned")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_bytes(images[0].image.image_bytes)
-    return dest

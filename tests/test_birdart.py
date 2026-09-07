@@ -52,6 +52,10 @@ def test_the_key_never_reaches_the_page(tmp_path, source, monkeypatch):
     assert "sk-live-secret-value" not in page
     assert re.search(r'name="openai_api_key" value="' + re.escape(birdart.KEY_SET), page)
     assert 'name="section" value="birdart"' in page and 'name="extra_prompt"' in page
+    # the model in use is filled in, and each provider links to its model list
+    assert 'name="openai_model" value="gpt-image-2"' in page
+    assert 'name="gemini_model" value="imagen-4.0-generate-001"' in page
+    assert birdart.MODEL_DOCS["openai"] in page and birdart.MODEL_DOCS["gemini"] in page
 
 
 def test_the_section_renders_with_no_settings_file_at_all(tmp_path, source, monkeypatch):

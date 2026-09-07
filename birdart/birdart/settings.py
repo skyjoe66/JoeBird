@@ -48,7 +48,10 @@ def provider() -> str:
 
 
 def model() -> str:
-    return str(get("model", "BIRDART_IMAGE_MODEL", "")) or DEFAULT_MODEL[provider()]
+    """The model for the active provider: its own field, else its default."""
+    p = provider()
+    env = {"openai": "BIRDART_IMAGE_MODEL", "gemini": "BIRDART_GEMINI_MODEL"}[p]
+    return str(get(f"{p}_model", env, "")).strip() or DEFAULT_MODEL[p]
 
 
 def quality() -> str:

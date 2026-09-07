@@ -281,6 +281,10 @@ def _detector_field(settings: Settings) -> str:
     )
 
 
+def _model_docs(provider: str) -> str:
+    return f'<a href="{birdart.MODEL_DOCS[provider]}" target="_blank" rel="noopener">available models</a>'
+
+
 def _birdart_field() -> str:
     """The bot's image-generation settings: provider, keys, model, quality,
     attempts, background, extra prompt. Keys show a placeholder when set and
@@ -294,8 +298,13 @@ def _birdart_field() -> str:
         '<input type="hidden" name="section" value="birdart">'
         f'<label>Provider <select name="provider">{_options([p for p, _ in birdart.PROVIDERS], s["provider"], dict(birdart.PROVIDERS).get)}</select></label>'
         + _text_field("openai_api_key", "OpenAI API key", key("openai"), "password")
+        + _text_field(
+            "openai_model", "OpenAI image model", s["openai_model"], "text", _model_docs("openai")
+        )
         + _text_field("gemini_api_key", "Gemini API key", key("gemini"), "password")
-        + _text_field("model", "Model", s["model"], "text")
+        + _text_field(
+            "gemini_model", "Gemini image model", s["gemini_model"], "text", _model_docs("gemini")
+        )
         + f'<label>Quality <select name="quality">{_options(birdart.QUALITIES, s["quality"])}</select></label>'
         + f'<label>Attempts per species <select name="attempts">{_options([1, 2, 3, 4], s["attempts"])}</select></label>'
         + f'<label>Background <select name="background">{_options([b for b, _ in birdart.BACKGROUNDS], s["background"], dict(birdart.BACKGROUNDS).get)}</select></label>'

@@ -24,15 +24,22 @@ from .config import REPO_ROOT
 PATH = REPO_ROOT / "birdart" / "state" / "settings.json"
 KEY_SET = "•" * 8  # what the form shows for a stored key; posting it back keeps the key
 
-PROVIDERS = (("openai", "OpenAI"), ("gemini", "Gemini (Imagen, experimental)"))
+PROVIDERS = (("openai", "OpenAI"), ("gemini", "Gemini (experimental)"))
+# Where each provider lists its image models, so the field beside the link can be
+# filled in from the source rather than from memory.
+MODEL_DOCS = {
+    "openai": "https://platform.openai.com/docs/models",
+    "gemini": "https://ai.google.dev/gemini-api/docs/models",
+}
+DEFAULT_MODEL = {"openai": "gpt-image-2", "gemini": "imagen-4.0-generate-001"}
 QUALITIES = ("low", "medium", "high")
 BACKGROUNDS = (("transparent", "transparent"), ("flat", "flat ivory"), ("paper", "textured paper"))
 KEYS = ("openai_api_key", "gemini_api_key")
-TEXT = ("provider", "model", "quality", "background", "extra_prompt")
 
 DEFAULTS: dict[str, Any] = {
     "provider": "openai",
-    "model": "",  # blank: the provider's default, gpt-image-2 / imagen-4.0-generate-001
+    "openai_model": "gpt-image-2",
+    "gemini_model": "imagen-4.0-generate-001",
     "quality": "high",
     "attempts": 2,
     "background": "transparent",
@@ -64,7 +71,9 @@ def changes(form: dict[str, list[str]], current: dict[str, Any]) -> dict[str, An
     out["quality"] = quality if quality in QUALITIES else out["quality"]
     background = got.get("background", out["background"])
     out["background"] = background if background in dict(BACKGROUNDS) else out["background"]
-    out["model"] = got.get("model", out["model"]).strip()[:80]
+    for field in ("openai_model", "gemini_model"):
+        if field in got:
+            out[field] = got[field].strip()[:80] or DEFAULT_MODEL[field.split("_")[0]]
     out["extra_prompt"] = got.get("extra_prompt", out["extra_prompt"]).strip()[:2000]
     try:
         out["attempts"] = max(1, min(4, int(got.get("attempts", out["attempts"]))))
