@@ -12,7 +12,7 @@ import time
 import urllib.request
 from urllib.parse import urljoin
 
-from . import state
+from . import rebuild, state
 from .acquire import CONFIG_ERROR, acquire
 from .config import DETECTOR, MAX_ATTEMPTS, POLL_SECONDS, USER_AGENT, has_artwork
 
@@ -68,6 +68,20 @@ def missing_species() -> list[dict]:
 
 
 def tick() -> None:
+    job = rebuild.pop()
+    if job:
+        # A rejected plate the owner asked to redraw. Same banner, same checks;
+        # the old picture stays up until the new one has passed them.
+        state.set_status(job, rebuild.pending())
+        _log(f"rebuilding {job['common']} ({job['scientific']})")
+        try:
+            ok, why = rebuild.run(job)
+        except Exception as e:
+            ok, why = False, f"unhandled: {e}"
+        state.note(job["scientific"], "done" if ok else "failed", why, job["common"], "openai")
+        _log(("rebuilt: " if ok else "rebuild failed: ") + f"{job['common']}: {why}")
+        state.clear_status()
+        return
     todo = missing_species()
     if not todo:
         cur = state.read_status()

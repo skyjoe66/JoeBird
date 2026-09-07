@@ -73,11 +73,11 @@ class GenerateError(RuntimeError):
     pass
 
 
-def _retry_flat(client, common: str):
+def _retry_flat(client, common: str, scientific: str):
     """This model will not do transparency: ask for flat ivory paper instead."""
     return client.images.generate(
         model=settings.model(),
-        prompt=_body(common) + _FLAT_PAPER,
+        prompt=_body(common, scientific) + _FLAT_PAPER,
         size=SIZE,
         quality=settings.quality(),
     )
@@ -123,16 +123,21 @@ _FLAT_PAPER = (
 )
 
 
-def _body(common: str) -> str:
-    """The prompt plus whatever the owner added on the admin page."""
+def _body(common: str, scientific: str) -> str:
+    """The prompt, plus whatever the owner added on the admin page, plus the
+    note they wrote for this species when they asked for it to be redrawn."""
+    body = PROMPT.format(common=common)
     extra = settings.extra_prompt()
-    return PROMPT.format(common=common) + (
-        f"\n\nAdditional instructions:\n\n{extra}\n" if extra else ""
-    )
+    if extra:
+        body += f"\n\nAdditional instructions:\n\n{extra}\n"
+    note = settings.note_for(scientific)
+    if note:
+        body += f"\n\nA previous attempt at this bird was rejected. This time make sure: {note}\n"
+    return body
 
 
-def _prompt_for(common: str) -> str:
-    body = _body(common)
+def _prompt_for(common: str, scientific: str) -> str:
+    body = _body(common, scientific)
     bg = settings.background()
     if bg == "transparent":
         return body + _NO_PAPER
@@ -145,13 +150,13 @@ def generate(common: str, scientific: str, dest: Path) -> Path:
     """One plate for this species, written to `dest`, by whichever provider the
     settings name."""
     if settings.provider() == "gemini":
-        return _generate_gemini(common, dest)
-    return _generate_openai(common, dest)
+        return _generate_gemini(common, scientific, dest)
+    return _generate_openai(common, scientific, dest)
 
 
-def _generate_openai(common: str, dest: Path) -> Path:
+def _generate_openai(common: str, scientific: str, dest: Path) -> Path:
     client = _client()
-    prompt = _prompt_for(common)
+    prompt = _prompt_for(common, scientific)
     model, quality, background = settings.model(), settings.quality(), settings.background()
     kwargs = {"model": model, "prompt": prompt, "size": SIZE, "quality": quality}
     if background == "transparent":
@@ -161,13 +166,13 @@ def _generate_openai(common: str, dest: Path) -> Path:
     try:
         result = client.images.generate(**kwargs)
     except TypeError:
-        result = _retry_flat(client, common)
+        result = _retry_flat(client, common, scientific)
     except Exception as e:
         msg = str(e)
         if background == "transparent" and (
             "background" in msg or "output_format" in msg or "unsupported" in msg.lower()
         ):
-            result = _retry_flat(client, common)
+            result = _retry_flat(client, common, scientific)
         else:
             raise GenerateError(f"{model} refused: {msg[:200]}") from e
 
@@ -189,7 +194,7 @@ def _generate_openai(common: str, dest: Path) -> Path:
     raise GenerateError("image had neither b64_json nor url")
 
 
-def _generate_gemini(common: str, dest: Path) -> Path:
+def _generate_gemini(common: str, scientific: str, dest: Path) -> Path:
     """Imagen through the google-genai SDK. Imagen has no transparent output, so
     the flat-paper wording is used and the cut-out lifts the paper as it does
     for a refused OpenAI transparency. Wired and settable; not yet exercised
@@ -203,7 +208,7 @@ def _generate_gemini(common: str, dest: Path) -> Path:
     if not key:
         raise GenerateError("no Gemini API key - set one in the admin page's AI images section")
     model = settings.model()
-    prompt = _body(common) + _FLAT_PAPER
+    prompt = _body(common, scientific) + _FLAT_PAPER
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         client = genai.Client(api_key=key)

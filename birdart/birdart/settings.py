@@ -17,6 +17,8 @@ from typing import Any
 from .config import STATE
 
 FILE = STATE / "settings.json"
+# Per-species prompt notes from the gallery's rebuild box: species -> text.
+NOTES = STATE / "notes.json"
 
 PROVIDERS = ("openai", "gemini")
 QUALITIES = ("low", "medium", "high")
@@ -94,3 +96,26 @@ def api_key(which: str) -> str:
     if which == "gemini":
         return os.environ.get("GEMINI_API_KEY", "").strip()
     return ""
+
+
+def _notes() -> dict[str, str]:
+    try:
+        data = json.loads(NOTES.read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def note_for(scientific: str) -> str:
+    return str(_notes().get(scientific, "")).strip()
+
+
+def set_note(scientific: str, note: str) -> None:
+    notes = _notes()
+    note = note.strip()[:2000]
+    if note:
+        notes[scientific] = note
+    else:
+        notes.pop(scientific, None)
+    NOTES.parent.mkdir(parents=True, exist_ok=True)
+    NOTES.write_text(json.dumps(notes, indent=2, sort_keys=True) + "\n")

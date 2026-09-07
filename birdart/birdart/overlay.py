@@ -24,8 +24,18 @@ from urllib.parse import parse_qs, unquote_plus, urljoin
 
 from PIL import Image, ImageDraw, ImageFont
 
-from . import labels, simulate, state
-from .config import FRAME, FUGLERAMME, OVERLAY_PORT, PAPER, STYLE, USER_AGENT, has_artwork
+from . import labels, rebuild, settings, simulate, state
+from .config import (
+    FRAME,
+    FUGLERAMME,
+    OVERLAY_PORT,
+    PAPER,
+    STYLE,
+    USER_AGENT,
+    artwork_dir,
+    has_artwork,
+    key_for,
+)
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +80,7 @@ PAGE = """<!doctype html>
  .chips button{padding:.3rem .7rem;font-size:.85rem}
 </style></head><body><main>
 <h1>Simulate a detection</h1>
+<p class="sub"><a href="/birdart/gallery">Review the plates the bot has drawn &rarr;</a></p>
 <p class="sub">Type a bird. It is written into the detector exactly as if the
 microphone had heard it, and the frame takes it from there.</p>
 
@@ -279,6 +290,10 @@ class Handler(BaseHTTPRequestHandler):
                 )
             elif path in ("/birdart", "/birdart/"):
                 self._send(PAGE.encode(), "text/html; charset=utf-8")
+            elif path == "/birdart/gallery":
+                self._send(gallery_page().encode(), "text/html; charset=utf-8")
+            elif path.startswith("/birdart/plate/"):
+                self._plate(path.rsplit("/", 1)[1])
             else:
                 self._send(b"not found", "text/plain", 404)
         except Exception as e:
@@ -286,6 +301,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         path = self.path.split("?", 1)[0]
+        if path == "/birdart/rebuild":
+            self._rebuild()
+            return
         if path != "/birdart/simulate":
             self._send(b"not found", "text/plain", 404)
             return
@@ -339,6 +357,29 @@ class Handler(BaseHTTPRequestHandler):
             "message": f"Heard {common} ({sci}). {tail}",
         }
 
+    def _plate(self, name: str) -> None:
+        if not re.fullmatch(r"[a-z0-9-]+\.png", name):
+            self._send(b"not found", "text/plain", 404)
+            return
+        p = artwork_dir() / name
+        if not p.is_file():
+            self._send(b"not found", "text/plain", 404)
+            return
+        self._send(p.read_bytes(), "image/png")
+
+    def _rebuild(self) -> None:
+        n = int(self.headers.get("Content-Length") or 0)
+        form = parse_qs(self.rfile.read(n).decode("utf-8", "replace") if n else "")
+        scientific = unquote_plus(form.get("scientific", [""])[0]).strip()
+        common = unquote_plus(form.get("common", [""])[0]).strip()
+        note = unquote_plus(form.get("note", [""])[0]).strip()
+        if scientific:
+            rebuild.request(scientific, common, note)
+        self.send_response(303)
+        self.send_header("Location", "/birdart/gallery")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _state(self) -> None:
         try:
             upstream = json.loads(_fetch("/state", timeout=15)).get("token", "")
@@ -357,6 +398,66 @@ class Handler(BaseHTTPRequestHandler):
             with contextlib.suppress(Exception):
                 png = _draw_banner(png, *b)
         self._send(png, "image/png")
+
+
+GALLERY_CSS = """
+ main{width:min(64rem,100%)}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:1rem}
+ .plate img{width:100%;height:14rem;object-fit:contain;background:#f0ece5;border-radius:.3rem}
+ .plate h3{font-size:1.05rem;font-weight:400;margin:.6rem 0 0}
+ .plate .sci{font-style:italic;color:#8a8880;font-size:.9rem}
+ .plate form{flex-direction:column;gap:.4rem;margin:.6rem 0 0}
+ textarea{padding:.55rem .7rem;border:1px solid #d8d4c8;border-radius:.4rem;background:#fff;
+          font:inherit;font-size:.92rem;color:inherit;min-height:3.2rem;resize:vertical}
+ .plate button{align-self:flex-start;padding:.45rem .9rem}
+ .queued{color:#8a6d3b;font-style:italic;font-size:.85rem}
+"""
+
+
+def html_escape(s: str) -> str:
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def gallery_page() -> str:
+    """Every plate in the library, newest first, each with a box to say what is
+    wrong and a button that queues a redraw with that note in the prompt."""
+    names = {key_for(sci): (sci, common) for sci, common in labels.all_labels()}
+    ledger = state.read_ledger()
+    queued = {j["scientific"] for j in rebuild.pending()}
+    plates = sorted(artwork_dir().glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
+    cards = []
+    for p in plates:
+        key = re.sub(r"-\d+$", "", p.stem)
+        sci, common = names.get(key, (key.replace("-", " ").capitalize(), ""))
+        why = html_escape(str(ledger.get(sci, {}).get("why", "")))
+        when = time.strftime("%Y-%m-%d %H:%M", time.localtime(p.stat().st_mtime))
+        note = html_escape(settings.note_for(sci))
+        status = '<div class="queued">queued for a redraw</div>' if sci in queued else ""
+        cards.append(
+            f'<div class="card plate"><img src="/birdart/plate/{p.name}" '
+            f'alt="{html_escape(common or sci)}" loading="lazy">'
+            f"<h3>{html_escape(common or sci)}</h3>"
+            f'<div class="sci">{html_escape(sci)} &middot; {p.name}</div>'
+            f'<div class="tag">{when}{" &middot; " + why if why else ""}</div>{status}'
+            f'<form method="post" action="/birdart/rebuild">'
+            f'<input type="hidden" name="scientific" value="{html_escape(sci)}">'
+            f'<input type="hidden" name="common" value="{html_escape(common)}">'
+            f'<textarea name="note" placeholder="What needs fixing - e.g. only one leg is '
+            f'visible; the tail is cropped">{note}</textarea>'
+            f'<button type="submit">Rebuild</button></form></div>'
+        )
+    head = PAGE.split("</style>")[0]
+    n = len(plates)
+    body = (
+        "</style></head><body><main>"
+        "<h1>Plates the bot has drawn</h1>"
+        '<p class="sub"><a href="/birdart/">&larr; simulate a detection</a> &middot; '
+        f"{n} plate{'' if n == 1 else 's'} in the library. A rebuild keeps the old picture "
+        "on the glass until the new one has passed every check, then replaces it.</p>"
+        f'<div class="grid">{"".join(cards) or "<p>Nothing drawn yet.</p>"}</div>'
+        "</main></body></html>"
+    )
+    return head + GALLERY_CSS + body
 
 
 def main() -> int:
