@@ -69,6 +69,23 @@ def _display_name(name: str) -> str:
     return _NAMES.get(name, name.replace("-", " ").title())
 
 
+def _style_field(ctx) -> str:
+    """The artwork-style radios, or nothing at all.
+
+    This fork folds every plate into one library/ (tools/build_library.py), so
+    there is normally a single folder and nothing to choose; a picker with one
+    option is noise on the page. The row comes back by itself if a second style
+    folder ever appears beside it.
+    """
+    styles = available_styles(ctx.images_dir)
+    if len(styles) < 2:
+        return ""
+    return (
+        '<div class="field"><span>Artwork style</span>'
+        f"{_radios('style', [(s, _display_name(s)) for s in styles], ctx.style)}</div>"
+    )
+
+
 def _options(values, selected, label=str) -> str:
     return "".join(
         f'<option value="{v}"{" selected" if v == selected else ""}>{label(v)}</option>'
@@ -354,10 +371,7 @@ def page(
         lookback_disabled="" if windowed else " disabled",
         lookbacks=_lookbacks(settings),
         names_field=_names_field(settings, languages, names_failure),
-        style_field=(
-            f'<div class="field"><span>Artwork style</span>'
-            f"{_radios('style', [(s, _display_name(s)) for s in available_styles(ctx.images_dir)], ctx.style)}</div>"
-        ),
+        style_field=(_style_field(ctx)),
         species_count=len(rows) if rows is not None else 0,
         species_rows=(
             species_html(rows, ctx.namer)

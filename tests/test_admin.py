@@ -257,3 +257,15 @@ def test_the_display_tab_names_the_password_rather_than_calling_it_unreachable(t
     assert "detector unreachable" not in page
     assert f'<li class="problem">detector {NEEDS_PASSWORD}. See <a href="#detector"' in page
     assert f"<dd>detector {NEEDS_PASSWORD}</dd>" in page  # beside the row that says it too
+
+
+def test_the_style_row_only_appears_when_there_is_something_to_choose(tmp_path, source):
+    # This fork folds every plate into one library/, so a style radio would be a
+    # picker with one option. It comes back by itself if a second folder appears.
+    for style in ("library",):
+        (tmp_path / style / "birds").mkdir(parents=True)
+        (tmp_path / style / "birds" / "aptenodytes-forsteri.png").write_bytes(b"")
+    assert "Artwork style" not in _page(tmp_path, source())
+    (tmp_path / "other" / "birds").mkdir(parents=True)
+    (tmp_path / "other" / "birds" / "aptenodytes-forsteri.png").write_bytes(b"")
+    assert "Artwork style" in _page(tmp_path, source())
