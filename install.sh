@@ -8,8 +8,8 @@
 set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 
-REPO_URL="https://github.com/arnegiacomo/fugleramme.git"
-REPO_DIR="${FUGLERAMME_DIR:-$HOME/fugleramme}"
+REPO_URL="https://github.com/skyjoe66/joebird.git"
+REPO_DIR="${FUGLERAMME_DIR:-$HOME/joebird}"
 REPO_REF="${FUGLERAMME_REF:-main}"
 ASSUME_YES=0
 DROP_BUNDLED=0

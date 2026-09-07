@@ -1,23 +1,21 @@
-# JoeBird
+# birdart - the bot
 
-Automatic artwork acquisition for [Fugleramme](https://github.com/arnegiacomo/fugleramme).
+The part of [JoeBird](../README.md) that draws what the frame cannot. It
+watches what BirdNET-Go identifies, and for any species the frame has no plate
+for it fetches one from the [shared library](https://github.com/skyjoe66/joebird-library)
+or, failing that, generates one with your OpenAI key, cuts it out, has it
+checked, and installs it.
 
-Fugleramme draws the birds it hears, but only the ones it has illustrations for.
-Its bundled artwork covers Northern Europe, so anywhere else the frame shows an
-empty perch no matter how much the detector hears. `birdart` closes that gap: it
-watches what BirdNET-Go identifies, and for any species the frame cannot draw it
-finds a public-domain plate, cuts the bird out, and installs it.
-
-Nothing here is Florida-specific. The species list comes from BirdNET-Go's own
-range filter, which follows the Pi's configured latitude and longitude, so the
-same install builds Norwegian birds in Bergen and Floridian ones in Gainesville.
+Nothing here is tied to a place. The species list is BirdNET-Go's own range
+filter, which follows the Pi's configured latitude and longitude, so the same
+install draws Norwegian birds in Bergen and Floridian ones in Gainesville.
 
 ## Services
 
 | Unit | What it does |
 | --- | --- |
 | `birdart-watcher` | Polls the detector; acquires artwork for anything heard but undrawable |
-| `birdart-overlay` | Serves `/state` and `/collage.png` in front of the frame, drawing the "Image Search Underway" banner |
+| `birdart-overlay` | Serves `/state` and `/collage.png` in front of the frame, drawing the "Building Image of Current Species" banner |
 
 ```bash
 systemctl status birdart-watcher birdart-overlay
@@ -77,15 +75,15 @@ Kept outside the Fugleramme checkout, where a self-update cannot reach it:
 
 - `state/status.json` - what is being acquired right now; read by the overlay
 - `state/ledger.json` - per-species attempts and outcomes
-- `work/` - downloaded plates and intermediate cut-outs
+- `work/` - generated images and intermediate cut-outs, regenerable
 
 ## Install
 
-Assumes a working Fugleramme on the same machine.
+Assumes the frame is installed and running from `~/joebird` (see the
+[top-level README](../README.md)); the bot lives beside it.
 
 ```bash
-git clone https://github.com/skyjoe66/JoeBird.git ~/birdart
-cd ~/birdart && uv sync
+cd ~/joebird/birdart && uv sync
 
 cp .env.example state/joebird.env
 chmod 600 state/joebird.env
@@ -120,9 +118,8 @@ change:
 
 ## Licensing
 
-**The code** in this repository is MIT - see [LICENSE](LICENSE). That covers the
-bot, not the pictures it installs: an Audubon scan and a generated plate each
-carry their own terms, and MIT says nothing about either.
+**The code** is MIT - see [LICENSE](LICENSE). That covers the bot, not the
+pictures it installs; those carry their own terms.
 
 **The artwork.** Everything the bot installs is AI-generated and dedicated to
 the public domain under CC0; the library's `ATTRIBUTION.md` and `LICENSE` say

@@ -39,7 +39,8 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name != 'pull_request'  # a PR proves the build, main publishes it
+    # a PR proves the build, main publishes it - upstream's site, never a fork's
+    if: github.event_name != 'pull_request' && github.repository == 'arnegiacomo/fugleramme'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

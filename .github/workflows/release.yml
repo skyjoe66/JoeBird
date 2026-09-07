@@ -13,7 +13,8 @@ concurrency:
 
 jobs:
   release:
-    if: github.actor != 'github-actions[bot]'  # belt and braces against a bump loop
+    # Upstream's release train; a fork must never cut its own from these commits.
+    if: github.repository == 'arnegiacomo/fugleramme' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

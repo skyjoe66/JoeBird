@@ -36,11 +36,14 @@ BIRDNET_PORT = 8090
 DEFAULT_DETECTOR_URL = f"http://127.0.0.1:{BIRDNET_PORT}"
 
 # Published docs site (mkdocs.yml site_url).
-DOCS_URL = "https://arnegiacomo.dev/fugleramme/"
+DOCS_URL = "https://github.com/skyjoe66/joebird#readme"
 
 # Self-update source. HTTPS, not the ssh origin: a service fetch has no agent.
-REPO_HTTPS_URL = "https://github.com/arnegiacomo/fugleramme.git"
-RELEASES_API = "https://api.github.com/repos/arnegiacomo/fugleramme/releases/latest"
+REPO_HTTPS_URL = "https://github.com/skyjoe66/joebird.git"
+# JoeBird cuts no releases yet, so this answers 404 and the admin shows no
+# update - which is the point: following upstream's tags would checkout --force
+# their tree over birdart/ and the library.
+RELEASES_API = "https://api.github.com/repos/skyjoe66/joebird/releases/latest"
 
 # Repo root: src/fugleramme/config.py -> repo root is three parents up.
 REPO_ROOT = Path(__file__).resolve().parents[2]
