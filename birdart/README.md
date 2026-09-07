@@ -36,6 +36,9 @@ uv run python -m birdart.backfill --limit 10      # do ten of them
 
 # what the bot is doing and what it has tried
 curl -s http://birdnet/birdart/status | python3 -m json.tool
+
+# time a call from detection to the glass: run it, then play the call
+uv run python -m birdart.timetest
 ```
 
 ## How one acquisition works
