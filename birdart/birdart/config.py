@@ -4,13 +4,17 @@ at another checkout or another frame without editing code."""
 import os
 from pathlib import Path
 
-# Where Fugleramme lives. The bot never writes into the repo except through
-# add_bird.py, which is the supported way in.
-FUGLERAMME = Path(os.environ.get("FUGLERAMME_DIR", "/home/joe/fugleramme"))
-STYLE = os.environ.get("BIRDART_STYLE", "custom")
+# This package lives at <fork>/birdart/birdart, so the frame is two levels up.
+# Override when the bot runs from a checkout of its own.
+_HERE = Path(__file__).resolve().parent
+FUGLERAMME = Path(os.environ.get("FUGLERAMME_DIR", _HERE.parents[1]))
+# The fork keeps every style folded into one library/ (tools/build_library.py),
+# so there is nothing to choose; this is the folder the bot installs into.
+STYLE = os.environ.get("BIRDART_STYLE", "library")
 
-# Our own state, deliberately outside the repo so a self-update cannot clobber it.
-ROOT = Path(os.environ.get("BIRDART_DIR", "/home/joe/birdart"))
+# Our own state: state/ and work/ beside the package, both gitignored, so a
+# self-update of the frame cannot clobber them.
+ROOT = Path(os.environ.get("BIRDART_DIR", _HERE.parent))
 WORK = ROOT / "work"
 STATE = ROOT / "state"
 STATUS_FILE = STATE / "status.json"

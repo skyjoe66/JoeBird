@@ -1,25 +1,27 @@
+# Copy to /etc/systemd/system/, then replace every /PATH/TO/fugleramme with
+# your checkout and User= with the account that owns it. The bot runs from the
+# birdart/ directory of the frame it feeds; its defaults find the frame from
+# there, so nothing else needs pointing anywhere.
 [Unit]
-Description=birdart watcher (acquires artwork for species BirdNET-Go hears but the frame cannot draw)
+Description=birdart watcher (draws a plate for any species BirdNET-Go hears that the frame cannot draw)
 After=network-online.target docker.service fugleramme-frame.service
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=joe
-WorkingDirectory=/home/joe/birdart
-Environment=PATH=/home/joe/.local/bin:/usr/local/bin:/usr/bin:/bin
-Environment=HOME=/home/joe
-# Generate plates with OpenAI rather than hunting Commons for them, into a style
-# kept separate from the real historical scans. Set BIRDART_SOURCE=commons and
-# BIRDART_STYLE=custom to switch back.
+User=USER
+WorkingDirectory=/PATH/TO/fugleramme/birdart
+Environment=PATH=/PATH/TO/home/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Generation with your own OpenAI key is the default, into the fork's single
+# library/. Set BIRDART_SOURCE=commons to hunt Wikimedia for a public-domain
+# plate instead; see ../.env.example for everything else.
 Environment=BIRDART_POLL=8
-Environment=BIRDART_SOURCE=openai
-Environment=BIRDART_STYLE=generated
-# The API key lives here so it never appears in `systemctl cat` or `ps`.
-# "-" means the unit still starts if the file is absent; generation then fails
+# The API key lives in a file so it never appears in `systemctl cat` or `ps`.
+# "-" means the unit still starts if a file is absent; generation then fails
 # with a clear message instead of the service refusing to run.
-EnvironmentFile=-/home/joe/birdart/state/joebird.env
-ExecStart=/home/joe/.local/bin/uv run python -m birdart.watcher
+EnvironmentFile=-/PATH/TO/fugleramme/birdart/state/joebird.env
+EnvironmentFile=-/PATH/TO/fugleramme/birdart/state/openai.env
+ExecStart=/PATH/TO/home/.local/bin/uv run python -m birdart.watcher
 SuccessExitStatus=143 SIGTERM
 Restart=always
 RestartSec=15

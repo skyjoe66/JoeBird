@@ -25,8 +25,9 @@ from .cutout import CutoutError, cut_file
 # manifest.json, while a generated one has no scan to point at.
 MAX_CANDIDATES = 6
 GENERATE_ATTEMPTS = int(os.environ.get("BIRDART_GENERATE_ATTEMPTS", "2"))
-# "commons" hunts for a historical plate; "openai" generates one.
-SOURCE = os.environ.get("BIRDART_SOURCE", "commons").strip().lower()
+# "openai" generates a plate with the owner's own API key - the point of this
+# fork; "commons" hunts Wikimedia for a public-domain one instead.
+SOURCE = os.environ.get("BIRDART_SOURCE", "openai").strip().lower()
 SOURCE_KEY = "generated" if SOURCE == "openai" else "commons"
 MODEL_NAME = os.environ.get("BIRDART_IMAGE_MODEL", "gpt-image-2")
 # Prefix marking a failure caused by the setup rather than by the species, so

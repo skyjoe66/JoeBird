@@ -27,7 +27,7 @@ journalctl -u birdart-watcher -f
 ## Commands
 
 ```bash
-cd /home/joe/birdart
+cd birdart
 
 # one species, now
 uv run python -m birdart.acquire "Cardinalis cardinalis" "Northern Cardinal"
@@ -112,8 +112,8 @@ change:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `BIRDART_SOURCE` | `commons` | `commons` hunts historical plates, `openai` generates them |
-| `BIRDART_STYLE` | `custom` | Fugleramme style to install into |
+| `BIRDART_SOURCE` | `openai` | `openai` generates a plate with your key, `commons` hunts a historical one |
+| `BIRDART_STYLE` | `library` | Folder under `assets/artwork/` to install into; the fork keeps just one |
 | `BIRDART_POLL` | `20` | Seconds between checks for newly heard species |
 | `BIRDART_MAX_ATTEMPTS` | `3` | Failures before a species is parked |
 | `BIRDART_IMAGE_MODEL` | `gpt-image-2` | Generation model |

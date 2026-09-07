@@ -23,6 +23,25 @@ Live on **[fugleramme.arnegiacomo.dev](https://fugleramme.arnegiacomo.dev)** run
 
 Hardware, install and operations docs: **[arnegiacomo.dev/fugleramme](https://arnegiacomo.dev/fugleramme/)**
 
+## This fork
+
+[arnegiacomo/fugleramme](https://github.com/arnegiacomo/fugleramme) ships
+artwork for Northern Europe, drawn one style at a time. This fork is for
+everywhere else, and it changes two things:
+
+- **One library, no picker.** Every style is folded into a single
+  `assets/artwork/library/` (`tools/build_library.py`), so the frame draws any
+  bird it hears that any plate can draw. With one folder there is nothing to
+  choose, and no renderer code changed to make that so.
+- **Birds it cannot draw get drawn.** [`birdart/`](birdart/) watches
+  BirdNET-Go, and for any species with no plate in the library it generates one
+  in the style of a 19th-century natural-history engraving using **your own
+  OpenAI API key**, cuts it out, checks it, and installs it. Synthetic images
+  are marked as such in `manifest.json` and in
+  [`library/ATTRIBUTION.md`](assets/artwork/library/ATTRIBUTION.md).
+
+Everything below is upstream's README, unchanged.
+
 ## How it works
 
 BirdNET-Go listens on a USB mic and records what it identifies. Fugleramme polls the BirdNET-Go api, matches each species to an illustration, then packs them onto a page, and redraws only when the birds change. There's an admin page that lets you configure what to show, and automatic updates and such.
