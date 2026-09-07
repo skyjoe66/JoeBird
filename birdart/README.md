@@ -63,7 +63,11 @@ first, with what made it and when. Under each:
   gh auth login                # GitHub.com -> SSH -> "Login with a web browser": enter the code it shows
   ```
 
-  If it is missing, the gallery says so and repeats these two lines. A plate already in the library says so instead of offering the
+  If it is missing, the gallery says so and repeats these two lines - and
+  points at the manual route, which needs no `gh` at all: copy the file and
+  open the pull request yourself, as the
+  [library's README](https://github.com/skyjoe66/joebird-library#contributing-a-bird)
+  describes. A plate already in the library says so instead of offering the
   button, and one you have sent links to its pull request.
 
 ## How one acquisition works

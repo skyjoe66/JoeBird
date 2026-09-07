@@ -32,7 +32,9 @@ GH_HELP = (
     "GitHub's gh is not installed or not logged in. On the Pi, as the user the bot runs as: "
     "sudo apt install gh && gh auth login   (choose GitHub.com, SSH, and 'Login with a web browser' - "
     "it prints a code to enter at github.com/login/device). Then press Send again. "
-    "Other systems: https://github.com/cli/cli#installation"
+    "Other systems: https://github.com/cli/cli#installation. "
+    "Or skip gh and send it by hand: the library's README says how - "
+    "https://github.com/skyjoe66/joebird-library#contributing-a-bird"
 )
 CLONE = WORK / "joebird-library"
 _NUMBERED = re.compile(r"-(\d+)$")
