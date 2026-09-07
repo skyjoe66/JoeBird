@@ -336,8 +336,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:Aquila_Imperialis_by_John_Gould.jpg"
   },
   "birds/ardea-alba-2.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/ardea-alba.png": {
     "source": "gould",
@@ -352,8 +351,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIVCommon_Heron.jpg"
   },
   "birds/ardea-herodias.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/ardea-purpurea.png": {
     "source": "gould",
@@ -448,8 +446,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeVWhite-eyed_Duck.jpg"
   },
   "birds/baeolophus-bicolor.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/bartramia-longicauda.png": {
     "source": "gould",
@@ -736,8 +733,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIIRed-collared_Goatsucker.jpg"
   },
   "birds/cardinalis-cardinalis.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/carduelis-carduelis-2.png": {
     "source": "vonwright",
@@ -1148,8 +1144,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIIIAzure_Tit.jpg"
   },
   "birds/cyanocitta-cristata.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/cygnus-columbianus.png": {
     "source": "gould",
@@ -1632,8 +1627,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIVOyster_Catcher.jpg"
   },
   "birds/haemorhous-mexicanus.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/haliaeetus-albicilla-2.png": {
     "source": "vonwright",
@@ -2144,8 +2138,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIKite.jpg"
   },
   "birds/mimus-polyglottos.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/monticola-solitarius.png": {
     "source": "gould",
@@ -2356,8 +2349,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00070.jpg"
   },
   "birds/passerina-ciris.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/pastor-roseus.png": {
     "source": "gould",
@@ -2632,8 +2624,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeVEared_Grebe.jpg"
   },
   "birds/poecile-carolinensis.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/poecile-cinctus.png": {
     "source": "vonwright",
@@ -2820,8 +2811,7 @@
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIIISerin_Finch.jpg"
   },
   "birds/sialia-sialis.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/sitta-europaea-2.png": {
     "source": "vonwright",
@@ -3315,9 +3305,11 @@
     "source": "gould",
     "url": "https://commons.wikimedia.org/wiki/File:GouldBirdsEuropeIVBaillons_Crake.jpg"
   },
+  "birds/zenaida-macroura-2.png": {
+    "source": "generated"
+  },
   "birds/zenaida-macroura.png": {
-    "source": "generated",
-    "synthetic": true
+    "source": "generated"
   },
   "birds/zoothera-aurea.png": {
     "source": "gould",

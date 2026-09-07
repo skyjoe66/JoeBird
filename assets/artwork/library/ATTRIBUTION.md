@@ -2,8 +2,9 @@
 
 Every style this fork ships, folded into one folder so the frame draws any bird
 it hears that any of them can draw. Each file keeps the terms of the style it
-came from; `manifest.json` links it to its plate, or marks it `synthetic` when
-there is no plate at all. Nothing here is relicensed by being combined.
+came from; `manifest.json` links it to its plate, or names `generated` as its
+source when there is no plate at all. Nothing here is relicensed by being
+combined.
 
 **Synthetic images are mixed in with real ones.** An entry whose source is
 `generated` was produced by an image model, not cut from a scan, and its
