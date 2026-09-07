@@ -1,0 +1,28 @@
+[Unit]
+Description=birdart watcher (acquires artwork for species BirdNET-Go hears but the frame cannot draw)
+After=network-online.target docker.service fugleramme-frame.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=joe
+WorkingDirectory=/home/joe/birdart
+Environment=PATH=/home/joe/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOME=/home/joe
+# Generate plates with OpenAI rather than hunting Commons for them, into a style
+# kept separate from the real historical scans. Set BIRDART_SOURCE=commons and
+# BIRDART_STYLE=custom to switch back.
+Environment=BIRDART_POLL=8
+Environment=BIRDART_SOURCE=openai
+Environment=BIRDART_STYLE=generated
+# The API key lives here so it never appears in `systemctl cat` or `ps`.
+# "-" means the unit still starts if the file is absent; generation then fails
+# with a clear message instead of the service refusing to run.
+EnvironmentFile=-/home/joe/birdart/state/joebird.env
+ExecStart=/home/joe/.local/bin/uv run python -m birdart.watcher
+SuccessExitStatus=143 SIGTERM
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
