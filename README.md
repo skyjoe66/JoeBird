@@ -29,10 +29,10 @@ Hardware, install and operations docs: **[arnegiacomo.dev/fugleramme](https://ar
 artwork for Northern Europe, drawn one style at a time. This fork is for
 everywhere else, and it changes two things:
 
-- **One library, no picker.** Every style is folded into a single
-  `assets/artwork/library/` (`tools/build_library.py`), so the frame draws any
-  bird it hears that any plate can draw. With one folder there is nothing to
-  choose, and no renderer code changed to make that so.
+- **One library, no picker, all of it generated.** Upstream's styles and
+  hand-cut plates are gone; `assets/artwork/library/` holds only what the bot
+  has drawn, so every bird on the glass matches every other. With one folder
+  there is nothing to choose, and the admin's style row is left out.
 - **Birds it cannot draw get drawn.** [`birdart/`](birdart/) watches
   BirdNET-Go, and for any species with no plate in the library it generates one
   in the style of a 19th-century natural-history engraving using **your own

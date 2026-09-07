@@ -1,97 +1,15 @@
 # library - attribution and licensing
 
-Every style this fork ships, folded into one folder so the frame draws any bird
-it hears that any of them can draw. Each file keeps the terms of the style it
-came from; `manifest.json` links it to its plate, or names `generated` as its
-source when there is no plate at all. Nothing here is relicensed by being
-combined.
+**Every bird in this folder is AI-generated.** None is a historical plate, and no
+part of any was drawn by the artists the style imitates. This fork draws only
+what the `birdart` bot generates with the owner's own OpenAI API key, so the
+library is the record of what that key has produced.
 
-**Synthetic images are mixed in with real ones.** An entry whose source is
-`generated` was produced by an image model, not cut from a scan, and its
-copyright status is unsettled. Real plates come first in the variant order, so
-`<key>.png` is a scan wherever one exists.
-
-The sections below are each source style's own ATTRIBUTION.md, unedited.
-
-
----
-
-## From `classic/`
-
-# classic - attribution and licensing
-
-Hand-coloured 1800s bird plates, cut and edited for this project, so none is
-faithful to its scan. The style is offered under **CC BY-SA 4.0**, the most
-restrictive of the sources below:
-
-> Digital restorations, edited for this project.
-> [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-
-`manifest.json` links each file to the plate it came from.
-
-## Sources
-
-**von Wright** - *Svenska Fåglar* by the **von Wright brothers** (Magnus
-1805-1868, Wilhelm 1810-1887, Ferdinand 1822-1906), from the Commons category
-[Svenska fåglar (von Wright)](https://commons.wikimedia.org/wiki/Category:Svenska_f%C3%A5glar_(von_Wright)):
-340 rawpixel plates (CC BY-SA 4.0) and 71 public-domain files. The `perches/`
-branches are cut from these and retouched with generative AI. Manifest key:
-`vonwright`.
-
-**von Wright (FNG)** - the brothers' studies, held by the **Finnish National
-Gallery**, from
-[rawpixel](https://www.rawpixel.com/art-studio/von%20wright?path=1525%7C%24publicdomain&sort=curated).
-CC0. Manifest key: `vonwright-fng`.
-
-**von Wright (rawpixel folio)** - rawpixel's own scans of the folio, (the ones Commons didnt have). CC0. Manifest key: `vonwright-rawpixel`.
- 
-
-**Gould** - *The Birds of Europe* by **John Gould** (1832-1837), Volumes 1-5,
-from the Commons category
-[The Birds of Europe (Gould)](https://commons.wikimedia.org/wiki/Category:The_Birds_of_Europe_(Gould)).
-Public domain (PD-old-70-expired). Manifest key: `gould`.
-
-**Gould (Birds of Asia)** - *The Birds of Asia* by **John Gould** and **Richard
-Bowdler Sharpe** (1850-1883), Volume 5, plate drawn and lithographed by **John
-Gould** and **William Hart**, printed by **Walter**, from the Commons category
-[The Birds of Asia (John Gould), Volume 5](https://commons.wikimedia.org/wiki/Category:The_Birds_of_Asia_(John_Gould),_Volume_5).
-Public domain (PD-Art, PD-old-100). Manifest key: `gould-asia`.
-
-**Dresser** - *A History of the Birds of Europe* by **H. E. Dresser**
-(1871-1881), plates by **J. G. Keulemans**, **Edward Neale**, **Archibald
-Thorburn** and **Joseph Wolf**, with **Richard Bowdler Sharpe**, from the
-Commons category
-[A history of the birds of Europe](https://commons.wikimedia.org/wiki/Category:A_history_of_the_birds_of_Europe).
-Scans from the Biodiversity Heritage Library, public domain
-(PD-scan / PD-old-70-expired), and Commons uploads offered under CC BY-SA 4.0.
-Manifest key: `dresser`.
-
-**Keulemans** - *Onze vogels in huis en tuin* by **J. G. Keulemans**
-(1869-1876), from the Biodiversity Heritage Library
-[scan on Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Onze_vogels_in_huis_en_tuin_(12238985825).jpg).
-Public domain (PD-scan / PD-old-70-expired); the BHL file is also offered under
-CC BY 2.0. Manifest key: `keulemans`.
-
-
----
-
-## From `generated/`
-
-# generated - attribution and licensing
-
-**The bird illustrations in this style are AI-generated. They are not historical
-plates, and no part of them was drawn by the artists the style imitates.**
-
-Each image was produced by OpenAI's image model from a prompt asking for a
+Each image was made by OpenAI's image model from a prompt asking for a
 nineteenth-century natural-history plate: a single anatomically accurate adult
 bird in side profile, engraved linework with hand-applied watercolour, on ivory
-paper. They were then background-removed, haloed and installed automatically by
-the `birdart` bot.
-
-This style is kept separate from `classic` and `custom` on purpose. Those hold
-real scans of real plates, each linked to its source in `manifest.json`;
-synthetic images have no such provenance and must not be mixed in with them
-where a viewer would assume otherwise.
+paper. It was then background-removed, haloed, checked and installed by the bot
+through `tools/add_bird.py`, which records it in `manifest.json`.
 
 ## What that means in practice
 
@@ -99,21 +17,20 @@ where a viewer would assume otherwise.
   model's rendering of a species, not an observation of one. Treat these as
   decoration, not as a field guide.
 - **Provenance is nil.** There is no plate, no engraver, no holding institution,
-  and `manifest.json` carries no source link for these files - only the
-  `generated` key pointing here.
+  and `manifest.json` carries no source link for these files - only the source
+  key pointing here.
 - **Licensing is unsettled.** The copyright status of AI-generated images varies
-  by jurisdiction and is unresolved in several. Do not redistribute this style
-  as though it carried the same clear terms as the public-domain plates in
-  `classic`.
-
-## Perches
-
-The `perches/` branches are the exception: they are copied from `classic/`, cut
-from **von Wright**'s *Svenska Fåglar* plates and retouched, and remain
-CC BY-SA 4.0. They are here so the empty-window state works. Their entries in
-`manifest.json` link the original scans. Manifest key: `vonwright`.
+  by jurisdiction and is unresolved in several. Do not redistribute this folder
+  as though it carried the clear terms of a public-domain plate.
 
 ## Sources
 
 **generated** - OpenAI image generation, prompted by the `birdart` bot. No
-underlying scan, no original work, no attributable artist.
+underlying scan, no original work, no attributable artist. Manifest key:
+`generated`.
+
+**von Wright** - the five `perches/` branches are the one exception: cut from
+the von Wright brothers' *Svenska Fåglar* plates as shipped by upstream
+Fugleramme's `classic` style, and retouched. CC BY-SA 4.0; their `manifest.json`
+entries link the original scans. They are here so the empty-window state has
+something to draw. Manifest key: `vonwright`.

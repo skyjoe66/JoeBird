@@ -39,7 +39,9 @@ REPO = Path(__file__).resolve().parents[1]
 IMAGES = REPO / "assets" / "artwork"
 BIRDS, PERCHES = "birds", "perches"
 MANIFEST, ATTRIBUTION = "manifest.json", "ATTRIBUTION.md"
-DEFAULT_SOURCES = ("classic", "custom", "generated")
+# The library is now the bot's own output and the source of truth; this tool
+# remains for folding a style folder into it, and defaults to nothing.
+DEFAULT_SOURCES: tuple[str, ...] = ()
 OUT = "library"
 SYNTHETIC_SOURCE = "generated"
 _NUMBERED = re.compile(r"-(\d+)$")
