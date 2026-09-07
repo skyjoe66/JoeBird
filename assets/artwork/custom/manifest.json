@@ -1,0 +1,66 @@
+{
+  "birds/cardinalis-cardinalis-2.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Cardinal_Grosbeak,_1833,_NGA_32300.jpg"
+  },
+  "birds/cardinalis-cardinalis.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Cardinal_Grosbeak,_1833,_NGA_32300.jpg"
+  },
+  "birds/cyanocitta-cristata.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Blue_Jay,_1831,_NGA_32243.jpg"
+  },
+  "birds/haemorhous-mexicanus.png": {
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Crimson_fronted_Purple_Finch_-_Drawn_from_nature_by_J.J._Audubon,_F.R.S.F.L._LCCN2014646350.jpg"
+  },
+  "birds/leucophaeus-atricilla.png": {
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Recueil_de_divers_oiseaux_%C3%A9trangers_et_peu_communs_(Tab._LXXVIII)_BHL41947723.jpg"
+  },
+  "birds/melanerpes-carolinus.png": {
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:American_ornithology;_or,_The_natural_history_of_the_birds_of_the_United_States_(Pl._7)_(8547546121).jpg"
+  },
+  "birds/mimus-polyglottos.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_The_Mocking_Bird,_1827,_NGA_32162.jpg"
+  },
+  "birds/passerina-ciris.png": {
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:Recueil_de_divers_oiseaux_%C3%A9trangers_et_peu_communs_(Tab._XXV)_BHL41947934.jpg"
+  },
+  "birds/sialia-sialis.png": {
+    "source": "commons",
+    "url": "https://commons.wikimedia.org/wiki/File:The_birds_of_America._(Livraison)_23,_Plate_CXIII,_Blue-bird,_Male_1.,_Female_2.,_Young_3._(i.e._Eastern_Bluebird)_;_Great_Mullein_-_estampe_-_Drawn_from_Nature_by_John_J._Audubon_;_Engraved,_printed_%26_Coloured..._-_btv1b53143990w.jpg"
+  },
+  "birds/thryothorus-ludovicianus.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Robert_Havell_after_John_James_Audubon,_Great_Carolina_Wren,_1830,_NGA_32219.jpg"
+  },
+  "birds/zenaida-macroura.png": {
+    "source": "audubon",
+    "url": "https://commons.wikimedia.org/wiki/File:Carolina_turtle_dove_Columba_carolinensis,_Linn._Males,_1._Females,_2._White_flowered_stuartia._Stuartia_malacodendion_c.1_v.1_plate_17_-_DPLA_-_4615c173ef1fddca7faad23afd4e211a_(page_1).jpg"
+  },
+  "perches/alder-catkins.png": {
+    "source": "vonwright",
+    "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00091.jpg"
+  },
+  "perches/birch-twig.png": {
+    "source": "vonwright",
+    "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00229.jpg"
+  },
+  "perches/lichen-log.png": {
+    "source": "vonwright",
+    "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00239.jpg"
+  },
+  "perches/pine-bough.png": {
+    "source": "vonwright",
+    "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00088.jpg"
+  },
+  "perches/pine-sprig.png": {
+    "source": "vonwright",
+    "url": "https://commons.wikimedia.org/wiki/File:Bird_illustration_from_Svenska_F%C3%A5glar_(Swedish_Birds)_by_the_von_Wright_brothers_from_rawpixel%27s_original_edition_of_the_publication_00092.jpg"
+  }
+}
