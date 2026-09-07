@@ -1,4 +1,7 @@
 {
+  "birds/agelaius-phoeniceus.png": {
+    "source": "generated"
+  },
   "birds/ardea-alba.png": {
     "source": "generated"
   },
@@ -15,6 +18,9 @@
     "source": "generated"
   },
   "birds/haemorhous-mexicanus.png": {
+    "source": "generated"
+  },
+  "birds/haliaeetus-leucocephalus.png": {
     "source": "generated"
   },
   "birds/mimus-polyglottos.png": {

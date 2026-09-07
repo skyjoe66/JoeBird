@@ -1,13 +1,9 @@
-"""Generate a plate with OpenAI instead of sourcing one from Wikimedia Commons.
+"""Generate a plate with an image model - OpenAI, or Gemini's Imagen.
 
-The Commons path is limited by what a century of lithographers happened to draw:
-for perhaps a third of species there is no clean single-bird plate at all, and no
-amount of better cutting invents one. Generation has no such ceiling.
-
-What it costs is provenance. These images are synthetic, they are nobody's
-scan, and the style that holds them says so - see the `generated` style's
-ATTRIBUTION.md. They are deliberately kept out of the styles that hold real
-historical plates.
+The images are synthetic and the library's ATTRIBUTION.md says so. Which
+provider, which model, at what quality, and with what extra instructions are all
+settings (`settings.py`), written from the frame's admin page and read at the
+moment of each call.
 
 The generated plate still goes through the same cut-out and the same visual QA
 as a Commons plate. The prompt asks for a single bird on generous ivory paper
@@ -19,11 +15,11 @@ on. The frame draws the species caption itself, as it always has.
 from __future__ import annotations
 
 import base64
-import os
 import urllib.request
 from pathlib import Path
 
-from .config import ROOT, USER_AGENT
+from . import settings
+from .config import USER_AGENT
 
 # The user's prompt, verbatim, with the one substitution it asks for.
 PROMPT = """Create a realistic, full-color natural-history illustration of a **{common}**.
@@ -39,6 +35,7 @@ Image requirements:
 * One anatomically accurate adult bird.
 * Full body visible in a graceful side-profile pose.
 * Head, bill, wings, tail, legs, and feet entirely within the frame.
+* Both legs and both feet anatomically visible and correctly attached to the body, each foot with the correct toes, the bird standing naturally on them.
 * Show the bird in a minimal version of its natural habitat.
 * Use a portrait-oriented composition with the bird centered and prominent.
 * Add only a few appropriate plants, branches, rocks, or water elements around its feet.
@@ -64,14 +61,12 @@ Avoid:
 * Decorative borders.
 * Multiple birds or other animals.
 * Cropped anatomy.
+* AI artifacts: a missing, extra, fused or floating limb; a bird with only one visible leg; a foot not joined to its leg.
 * Watermarks or signatures.
 
 Generate the finished image directly without asking follow-up questions."""
 
-MODEL = os.environ.get("BIRDART_IMAGE_MODEL", "gpt-image-2")
-SIZE = os.environ.get("BIRDART_IMAGE_SIZE", "1024x1536")  # portrait, as the prompt asks
-QUALITY = os.environ.get("BIRDART_IMAGE_QUALITY", "medium")
-KEY_FILE = ROOT / "state" / "openai.env"
+SIZE = "1024x1536"  # portrait, as the prompt asks
 
 
 class GenerateError(RuntimeError):
@@ -81,30 +76,21 @@ class GenerateError(RuntimeError):
 def _retry_flat(client, common: str):
     """This model will not do transparency: ask for flat ivory paper instead."""
     return client.images.generate(
-        model=MODEL,
-        prompt=PROMPT.format(common=common) + _FLAT_PAPER,
+        model=settings.model(),
+        prompt=_body(common) + _FLAT_PAPER,
         size=SIZE,
-        quality=QUALITY,
+        quality=settings.quality(),
     )
 
 
 def api_key() -> str:
-    """From the environment, else from the key file systemd also reads.
-
-    Kept in a file rather than the unit so the key never appears in `systemctl
-    cat`, `ps`, or this repository.
-    """
-    key = os.environ.get("OPENAI_API_KEY", "").strip()
-    if key:
-        return key
-    try:
-        for line in KEY_FILE.read_text().splitlines():
-            line = line.strip()
-            if line.startswith("OPENAI_API_KEY="):
-                return line.split("=", 1)[1].strip().strip("'\"")
-    except OSError:
-        pass
-    raise GenerateError(f"no OPENAI_API_KEY in the environment or {KEY_FILE}")
+    """The OpenAI key: the admin's settings file, else the environment, else
+    state/openai.env, which systemd also reads. A file rather than the unit so
+    the key never appears in `systemctl cat`, `ps`, or this repository."""
+    key = settings.api_key("openai")
+    if not key:
+        raise GenerateError("no OpenAI API key - set one in the admin page's AI images section")
+    return key
 
 
 def _client():
@@ -122,8 +108,6 @@ def _client():
 # paper stays, at 55 the titmouse lost its cheek and eye. Asking for no paper at
 # all removes the conflict, and costs nothing - the frame lays the bird on its
 # own textured paper regardless.
-BACKGROUND = os.environ.get("BIRDART_IMAGE_BACKGROUND", "transparent").strip().lower()
-
 _NO_PAPER = (
     "\n\nBackground:\n\n"
     "* Render the bird and the few elements at its feet on a FULLY TRANSPARENT "
@@ -139,21 +123,38 @@ _FLAT_PAPER = (
 )
 
 
+def _body(common: str) -> str:
+    """The prompt plus whatever the owner added on the admin page."""
+    extra = settings.extra_prompt()
+    return PROMPT.format(common=common) + (
+        f"\n\nAdditional instructions:\n\n{extra}\n" if extra else ""
+    )
+
+
 def _prompt_for(common: str) -> str:
-    body = PROMPT.format(common=common)
-    if BACKGROUND == "transparent":
+    body = _body(common)
+    bg = settings.background()
+    if bg == "transparent":
         return body + _NO_PAPER
-    if BACKGROUND == "flat":
+    if bg == "flat":
         return body + _FLAT_PAPER
     return body
 
 
 def generate(common: str, scientific: str, dest: Path) -> Path:
-    """One plate for this species, written to `dest`."""
+    """One plate for this species, written to `dest`, by whichever provider the
+    settings name."""
+    if settings.provider() == "gemini":
+        return _generate_gemini(common, dest)
+    return _generate_openai(common, dest)
+
+
+def _generate_openai(common: str, dest: Path) -> Path:
     client = _client()
     prompt = _prompt_for(common)
-    kwargs = {"model": MODEL, "prompt": prompt, "size": SIZE, "quality": QUALITY}
-    if BACKGROUND == "transparent":
+    model, quality, background = settings.model(), settings.quality(), settings.background()
+    kwargs = {"model": model, "prompt": prompt, "size": SIZE, "quality": quality}
+    if background == "transparent":
         # Not every model accepts these; a refusal falls back to asking for flat
         # paper in words, which the cut-out can still handle.
         kwargs |= {"background": "transparent", "output_format": "png"}
@@ -163,12 +164,12 @@ def generate(common: str, scientific: str, dest: Path) -> Path:
         result = _retry_flat(client, common)
     except Exception as e:
         msg = str(e)
-        if BACKGROUND == "transparent" and (
+        if background == "transparent" and (
             "background" in msg or "output_format" in msg or "unsupported" in msg.lower()
         ):
             result = _retry_flat(client, common)
         else:
-            raise GenerateError(f"{MODEL} refused: {msg[:200]}") from e
+            raise GenerateError(f"{model} refused: {msg[:200]}") from e
 
     if not getattr(result, "data", None):
         raise GenerateError("no image returned")
@@ -186,3 +187,36 @@ def generate(common: str, scientific: str, dest: Path) -> Path:
             dest.write_bytes(r.read())
         return dest
     raise GenerateError("image had neither b64_json nor url")
+
+
+def _generate_gemini(common: str, dest: Path) -> Path:
+    """Imagen through the google-genai SDK. Imagen has no transparent output, so
+    the flat-paper wording is used and the cut-out lifts the paper as it does
+    for a refused OpenAI transparency. Wired and settable; not yet exercised
+    against a live key here."""
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError as e:
+        raise GenerateError(f"google-genai package not available: {e}") from e
+    key = settings.api_key("gemini")
+    if not key:
+        raise GenerateError("no Gemini API key - set one in the admin page's AI images section")
+    model = settings.model()
+    try:
+        client = genai.Client(api_key=key)
+        result = client.models.generate_images(
+            model=model,
+            prompt=_body(common) + _FLAT_PAPER,
+            config=types.GenerateImagesConfig(
+                number_of_images=1, aspect_ratio="3:4", output_mime_type="image/png"
+            ),
+        )
+    except Exception as e:
+        raise GenerateError(f"{model} refused: {str(e)[:200]}") from e
+    images = getattr(result, "generated_images", None) or []
+    if not images or not getattr(images[0], "image", None):
+        raise GenerateError("no image returned")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(images[0].image.image_bytes)
+    return dest

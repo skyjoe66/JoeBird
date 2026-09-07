@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import ClassVar
 from urllib.parse import parse_qs, urlparse
 
-from .. import __version__, modes, updates
+from .. import __version__, birdart, modes, updates
 from ..languages import namer
 from ..panel import Panel, resolution_of
 from ..picks import Picks
@@ -245,7 +245,9 @@ def make_handler(
                 self._send(404, b"not found", "text/plain")
                 return
             action = form.get("action", [""])[0]
-            if action == "check":
+            if form.get("section", [""])[0] == "birdart":
+                birdart.save(birdart.changes(form, birdart.load()))
+            elif action == "check":
                 status.update_error = None
                 status.update_available = updates.available(force=True)
             elif action == "update" and status.update_available:

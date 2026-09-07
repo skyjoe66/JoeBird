@@ -14,7 +14,7 @@ from pathlib import Path
 from string import Template
 from urllib.parse import urlparse
 
-from .. import __version__, modes
+from .. import __version__, birdart, modes
 from ..api import probe
 from ..config import BIRDNET_PORT, DOCS_URL, WEB_HEIGHTS
 from ..languages import NONE, Namer, catalog, catalog_failure, ordered
@@ -281,6 +281,30 @@ def _detector_field(settings: Settings) -> str:
     )
 
 
+def _birdart_field() -> str:
+    """The bot's image-generation settings: provider, keys, model, quality,
+    attempts, background, extra prompt. Keys show a placeholder when set and
+    are never sent to the page; see fugleramme.birdart."""
+    s = birdart.load()
+
+    def key(which: str) -> str:
+        return birdart.KEY_SET if birdart.key_is_set(s, which) else ""
+
+    return (
+        '<input type="hidden" name="section" value="birdart">'
+        f'<label>Provider <select name="provider">{_options([p for p, _ in birdart.PROVIDERS], s["provider"], dict(birdart.PROVIDERS).get)}</select></label>'
+        + _text_field("openai_api_key", "OpenAI API key", key("openai"), "password")
+        + _text_field("gemini_api_key", "Gemini API key", key("gemini"), "password")
+        + _text_field("model", "Model", s["model"], "text")
+        + f'<label>Quality <select name="quality">{_options(birdart.QUALITIES, s["quality"])}</select></label>'
+        + f'<label>Attempts per species <select name="attempts">{_options([1, 2, 3, 4], s["attempts"])}</select></label>'
+        + f'<label>Background <select name="background">{_options([b for b, _ in birdart.BACKGROUNDS], s["background"], dict(birdart.BACKGROUNDS).get)}</select></label>'
+        + '<label>Extra prompt instructions <textarea name="extra_prompt" rows="3" '
+        'placeholder="Appended to the plate prompt, verbatim.">'
+        f"{html.escape(s['extra_prompt'])}</textarea></label>"
+    )
+
+
 def birdnet_link(url: str) -> tuple[str, int | None]:
     """The nav link to BirdNET-Go: (address, port to substitute this page's host
     on). A loopback address is loopback from the Pi only, so a remote browser
@@ -371,6 +395,7 @@ def page(
         lookback_disabled="" if windowed else " disabled",
         lookbacks=_lookbacks(settings),
         names_field=_names_field(settings, languages, names_failure),
+        birdart_field=_birdart_field(),
         style_field=(_style_field(ctx)),
         species_count=len(rows) if rows is not None else 0,
         species_rows=(

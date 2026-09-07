@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import fcntl
-import os
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -18,12 +17,10 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import library, state, vision
+from . import library, settings, state, vision
 from .config import FUGLERAMME, STATE, STYLE, WORK, key_for
 from .cutout import CutoutError, cut_file
 
-GENERATE_ATTEMPTS = int(os.environ.get("BIRDART_GENERATE_ATTEMPTS", "2"))
-MODEL_NAME = os.environ.get("BIRDART_IMAGE_MODEL", "gpt-image-2")
 # Every image the bot installs is synthetic; this manifest key says so, and the
 # library's ATTRIBUTION.md is where it is explained.
 SOURCE_KEY = "generated"
@@ -178,8 +175,9 @@ def _from_openai(scientific: str, common: str) -> tuple[bool, str]:
     raw = WORK / f"{key}-generated.png"
     png = WORK / f"{key}-cutout.png"
 
-    for attempt in range(1, GENERATE_ATTEMPTS + 1):
-        _log(f"[{scientific}] generating a plate (attempt {attempt}/{GENERATE_ATTEMPTS})")
+    attempts, model = settings.attempts(), settings.model()
+    for attempt in range(1, attempts + 1):
+        _log(f"[{scientific}] generating a plate with {model} (attempt {attempt}/{attempts})")
         try:
             generate(common, scientific, raw)
         except GenerateError as e:
@@ -212,9 +210,9 @@ def _from_openai(scientific: str, common: str) -> tuple[bool, str]:
             _log("    could not inspect the generated bird; not installing blind")
             continue
         if _install(png, scientific, ""):
-            return True, f"generated with {MODEL_NAME}"
+            return True, f"generated with {model}"
 
-    return False, f"no generated image passed inspection in {GENERATE_ATTEMPTS} attempts"
+    return False, f"no generated image passed inspection in {attempts} attempts"
 
 
 def main() -> int:

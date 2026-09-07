@@ -19,6 +19,9 @@ span { display: block; font-weight: 600; margin-bottom: 0.25rem; }
 small { color: #666; font-weight: 400; }
 select { font-size: 1rem; padding: 0.4rem; }
 input { font-size: 1rem; padding: 0.4rem; width: 8rem; }
+/* the AI images block: keys and a model name are long, the prompt is prose */
+input[name$="_api_key"], input[name="model"], textarea { width: 100%; box-sizing: border-box; }
+textarea { font: inherit; font-size: 1rem; padding: 0.4rem; }
 .field { margin: 0 0 1.25rem; }
 label.sub { display: block; margin: 0.6rem 0 0; font-weight: 400; }
 label.sub small { display: block; margin-bottom: 0.15rem; }
