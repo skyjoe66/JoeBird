@@ -17,6 +17,8 @@ from typing import Any
 from .config import STATE
 
 FILE = STATE / "settings.json"
+# The shared library repository (owner/name) the Send-to-library button targets.
+# Its raw URL for reading is BIRDART_LIBRARY in library.py.
 # Per-species prompt notes from the gallery's rebuild box: species -> text.
 NOTES = STATE / "notes.json"
 

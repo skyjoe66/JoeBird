@@ -20,11 +20,11 @@ import re
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, unquote_plus, urljoin
+from urllib.parse import parse_qs, quote, unquote_plus, urljoin
 
 from PIL import Image, ImageDraw, ImageFont
 
-from . import labels, rebuild, settings, simulate, state
+from . import contribute, labels, rebuild, settings, simulate, state
 from .config import (
     FRAME,
     FUGLERAMME,
@@ -291,7 +291,11 @@ class Handler(BaseHTTPRequestHandler):
             elif path in ("/birdart", "/birdart/"):
                 self._send(PAGE.encode(), "text/html; charset=utf-8")
             elif path == "/birdart/gallery":
-                self._send(gallery_page().encode(), "text/html; charset=utf-8")
+                q = parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+                self._send(
+                    gallery_page(unquote_plus(q.get("msg", [""])[0])).encode(),
+                    "text/html; charset=utf-8",
+                )
             elif path.startswith("/birdart/plate/"):
                 self._plate(path.rsplit("/", 1)[1])
             else:
@@ -303,6 +307,9 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?", 1)[0]
         if path == "/birdart/rebuild":
             self._rebuild()
+            return
+        if path == "/birdart/contribute":
+            self._contribute()
             return
         if path != "/birdart/simulate":
             self._send(b"not found", "text/plain", 404)
@@ -380,6 +387,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def _contribute(self) -> None:
+        n = int(self.headers.get("Content-Length") or 0)
+        form = parse_qs(self.rfile.read(n).decode("utf-8", "replace") if n else "")
+        scientific = unquote_plus(form.get("scientific", [""])[0]).strip()
+        common = unquote_plus(form.get("common", [""])[0]).strip()
+        msg = ""
+        if scientific:
+            ok, msg = contribute.submit(scientific, common)
+            msg = ("sent: " if ok else "could not send: ") + msg
+        self.send_response(303)
+        self.send_header("Location", "/birdart/gallery?msg=" + quote(msg[:300]))
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _state(self) -> None:
         try:
             upstream = json.loads(_fetch("/state", timeout=15)).get("token", "")
@@ -411,6 +432,7 @@ GALLERY_CSS = """
           font:inherit;font-size:.92rem;color:inherit;min-height:3.2rem;resize:vertical}
  .plate button{align-self:flex-start;padding:.45rem .9rem}
  .queued{color:#8a6d3b;font-style:italic;font-size:.85rem}
+ .share{margin-top:.5rem}
 """
 
 
@@ -418,12 +440,31 @@ def html_escape(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def gallery_page() -> str:
+def _share(sci: str, common: str, sent: dict) -> str:
+    """The plate's standing with the shared library: already there, a PR open,
+    or a button to send it."""
+    if sci in sent:
+        url = html_escape(str(sent[sci].get("url", "")))
+        return f'<div class="tag">sent to the shared library &middot; <a href="{url}">pull request</a></div>'
+    if contribute.in_library(sci):
+        return '<div class="tag">in the shared library</div>'
+    return (
+        '<form method="post" action="/birdart/contribute" class="share">'
+        f'<input type="hidden" name="scientific" value="{html_escape(sci)}">'
+        f'<input type="hidden" name="common" value="{html_escape(common)}">'
+        '<button type="submit" title="Opens a pull request on the shared library under your GitHub account">'
+        "Send to library</button></form>"
+    )
+
+
+def gallery_page(msg: str = "") -> str:
     """Every plate in the library, newest first, each with a box to say what is
-    wrong and a button that queues a redraw with that note in the prompt."""
+    wrong and a button that queues a redraw with that note in the prompt, and a
+    button that sends it to the shared library as a pull request."""
     names = {key_for(sci): (sci, common) for sci, common in labels.all_labels()}
     ledger = state.read_ledger()
     queued = {j["scientific"] for j in rebuild.pending()}
+    sent = contribute.records()
     plates = sorted(artwork_dir().glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
     cards = []
     for p in plates:
@@ -444,14 +485,20 @@ def gallery_page() -> str:
             f'<input type="hidden" name="common" value="{html_escape(common)}">'
             f'<textarea name="note" placeholder="What needs fixing - e.g. only one leg is '
             f'visible; the tail is cropped">{note}</textarea>'
-            f'<button type="submit">Rebuild</button></form></div>'
+            f'<button type="submit">Rebuild</button></form>'
+            f"{_share(sci, common, sent)}</div>"
         )
     head = PAGE.split("</style>")[0]
     n = len(plates)
     body = (
         "</style></head><body><main>"
         "<h1>Plates the bot has drawn</h1>"
-        '<p class="sub"><a href="/birdart/">&larr; simulate a detection</a> &middot; '
+        + (
+            f'<p class="{"err" if msg.startswith("could not") else "ok"}">{html_escape(msg)}</p>'
+            if msg
+            else ""
+        )
+        + '<p class="sub"><a href="/birdart/">&larr; simulate a detection</a> &middot; '
         f"{n} plate{'' if n == 1 else 's'} in the library. A rebuild keeps the old picture "
         "on the glass until the new one has passed every check, then replaces it.</p>"
         f'<div class="grid">{"".join(cards) or "<p>Nothing drawn yet.</p>"}</div>'

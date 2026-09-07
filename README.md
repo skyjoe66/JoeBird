@@ -91,6 +91,8 @@ covers its commands, settings and state.
 - **`http://<pi>:8090/`** is BirdNET-Go's own dashboard: detections,
   spectrograms, live audio, its range filter and location.
 - **`http://<pi>/birdart/`** is the bot: what it is drawing, what it has tried.
+  **`/birdart/gallery`** is every plate it has drawn - reject one with a note and
+  it redraws, or send one to the shared library as a pull request.
 - The panel's four buttons cycle display modes, toggle names and rotate.
 
 **Cost.** A generation is one image-model call, and each species is generated

@@ -41,6 +41,24 @@ curl -s http://birdnet/birdart/status | python3 -m json.tool
 uv run python -m birdart.timetest
 ```
 
+## The gallery
+
+`http://<pi>/birdart/gallery` shows every plate the bot has drawn, newest
+first, with what made it and when. Under each:
+
+- **Rebuild** - write what is wrong (*only one leg is visible*, *the tail is
+  cropped*) and press it. The bot queues a redraw with that note added to the
+  prompt - kept per species, so it applies to any later redraw too - and runs
+  it between detections under the usual banner. The old picture stays on the
+  glass until the new one has passed every check, then replaces it; a failed
+  rebuild changes nothing.
+- **Send to library** - opens a pull request on the shared library adding
+  this plate, its manifest line and a rebuilt `index.json`. Needs GitHub's
+  `gh` installed and logged in (`gh auth login`) as the user the bot runs as;
+  it pushes a branch to your fork of the library, or to the library itself if
+  you own it. A plate already in the library says so instead of offering the
+  button, and one you have sent links to its pull request.
+
 ## How one acquisition works
 
 1. **Shared library first.** `index.json` from the public library repository is
