@@ -27,6 +27,13 @@ from . import index, library, settings, state
 from .config import FUGLERAMME, STATE, STYLE, WORK, key_for
 
 RECORD = STATE / "contributed.json"
+# What the gallery shows when gh is missing or logged out - the whole fix, not a hint.
+GH_HELP = (
+    "GitHub's gh is not installed or not logged in. On the Pi, as the user the bot runs as: "
+    "sudo apt install gh && gh auth login   (choose GitHub.com, SSH, and 'Login with a web browser' - "
+    "it prints a code to enter at github.com/login/device). Then press Send again. "
+    "Other systems: https://github.com/cli/cli#installation"
+)
 CLONE = WORK / "joebird-library"
 _NUMBERED = re.compile(r"-(\d+)$")
 
@@ -52,9 +59,7 @@ def _gh_login() -> str:
     try:
         return _run(["gh", "api", "user", "--jq", ".login"], timeout=30)
     except (ContributeError, FileNotFoundError) as e:
-        raise ContributeError(
-            "gh is not installed or not logged in - run `gh auth login` as the user the bot runs as"
-        ) from e
+        raise ContributeError(GH_HELP) from e
 
 
 def records() -> dict[str, dict]:

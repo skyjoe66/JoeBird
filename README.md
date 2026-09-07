@@ -77,6 +77,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now birdart-overlay birdart-watcher
 ```
 
+To send plates to the shared library from the gallery, the Pi also needs
+GitHub's `gh`, logged in once: `sudo apt install gh && gh auth login`.
+
 `deploy/` also holds the Apache site that puts the bot's banner in front of
 the frame, and `kiosk.sh`, which opens Chromium full-screen on the Pi's own
 display. The bot restarts the frame after each install, so the user it runs as

@@ -53,10 +53,17 @@ first, with what made it and when. Under each:
   glass until the new one has passed every check, then replaces it; a failed
   rebuild changes nothing.
 - **Send to library** - opens a pull request on the shared library adding
-  this plate, its manifest line and a rebuilt `index.json`. Needs GitHub's
-  `gh` installed and logged in (`gh auth login`) as the user the bot runs as;
-  it pushes a branch to your fork of the library, or to the library itself if
-  you own it. A plate already in the library says so instead of offering the
+  this plate, its manifest line and a rebuilt `index.json`. It pushes a
+  branch to your fork of the library, or to the library itself if you own it.
+  It needs GitHub's `gh` on the Pi, logged in as the user the bot runs as -
+  once, on the Pi:
+
+  ```bash
+  sudo apt install gh          # Raspberry Pi OS / Debian; other systems: github.com/cli/cli#installation
+  gh auth login                # GitHub.com -> SSH -> "Login with a web browser": enter the code it shows
+  ```
+
+  If it is missing, the gallery says so and repeats these two lines. A plate already in the library says so instead of offering the
   button, and one you have sent links to its pull request.
 
 ## How one acquisition works
