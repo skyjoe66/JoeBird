@@ -24,7 +24,7 @@ from urllib.parse import parse_qs, quote, unquote_plus, urljoin
 
 from PIL import Image, ImageDraw, ImageFont
 
-from . import contribute, labels, rebuild, settings, simulate, state
+from . import contribute, labels, library, rebuild, settings, simulate, state
 from .config import (
     FRAME,
     FUGLERAMME,
@@ -443,11 +443,12 @@ def html_escape(s: str) -> str:
 def _share(sci: str, common: str, sent: dict) -> str:
     """The plate's standing with the shared library: already there, a PR open,
     or a button to send it."""
-    if sci in sent:
-        url = html_escape(str(sent[sci].get("url", "")))
-        return f'<div class="tag">sent to the shared library &middot; <a href="{url}">pull request</a></div>'
+    url = html_escape(str(sent.get(sci, {}).get("url", "")))
+    pr = f' &middot; <a href="{url}">pull request</a>' if url else ""
     if contribute.in_library(sci):
-        return '<div class="tag">in the shared library</div>'
+        return f'<div class="tag">in the shared library{pr}</div>'
+    if url:
+        return f'<div class="tag">sent to the shared library{pr} &middot; awaiting review</div>'
     return (
         '<form method="post" action="/birdart/contribute" class="share">'
         f'<input type="hidden" name="scientific" value="{html_escape(sci)}">'
@@ -465,6 +466,7 @@ def gallery_page(msg: str = "") -> str:
     ledger = state.read_ledger()
     queued = {j["scientific"] for j in rebuild.pending()}
     sent = contribute.records()
+    library.index(fresh=True)  # a merge on GitHub should show here now, not in an hour
     plates = sorted(artwork_dir().glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
     cards = []
     for p in plates:

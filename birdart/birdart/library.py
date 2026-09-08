@@ -42,13 +42,14 @@ def _get(url: str) -> bytes:
         return r.read()
 
 
-def index() -> dict:
+def index(fresh: bool = False) -> dict:
     """The library's index, from cache when fresh, else fetched; {} when there
-    is no library or nothing answers and nothing is cached."""
+    is no library or nothing answers and nothing is cached. `fresh` skips the
+    cache - the gallery does that on every load, so a merge shows at once."""
     if not LIBRARY_URL:
         return {}
     try:
-        if CACHE.exists() and time.time() - CACHE.stat().st_mtime < INDEX_TTL:
+        if not fresh and CACHE.exists() and time.time() - CACHE.stat().st_mtime < INDEX_TTL:
             return json.loads(CACHE.read_text())
     except (OSError, ValueError):
         pass
