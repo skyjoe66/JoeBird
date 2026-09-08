@@ -53,7 +53,8 @@ first, with what made it and when. Under each:
   glass until the new one has passed every check, then replaces it; a failed
   rebuild changes nothing.
 - **Send to library** - opens a pull request on the shared library adding
-  this plate, its manifest line and a rebuilt `index.json`. It pushes a
+  this plate (and a small JSON sidecar naming the model); the library rebuilds
+  its own index when the pull request merges. It pushes a
   branch to your fork of the library, or to the library itself if you own it.
   It needs GitHub's `gh` on the Pi, logged in as the user the bot runs as -
   once, on the Pi:
