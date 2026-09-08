@@ -22,9 +22,10 @@ from typing import Any
 from .config import REPO_ROOT
 
 PATH = REPO_ROOT / "birdart" / "state" / "settings.json"
-# The bot's overlay, which serves the gallery; the admin links there with the
+# Where /birdart/ is reachable from a browser: Apache on 80, which proxies the
+# bot's overlay (itself bound to loopback). The admin links there with the
 # page's own hostname, the way it links to BirdNET-Go.
-OVERLAY_PORT = int(os.environ.get("BIRDART_OVERLAY_PORT", "8081"))
+GALLERY_PORT = int(os.environ.get("BIRDART_GALLERY_PORT", "80"))
 KEY_SET = "•" * 8  # what the form shows for a stored key; posting it back keeps the key
 
 PROVIDERS = (("openai", "OpenAI"), ("gemini", "Gemini (experimental)"))

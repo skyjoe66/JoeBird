@@ -383,7 +383,7 @@ def page(
         config=json.dumps(
             {
                 "birdnetUrl": birdnet_url,
-                "platesPort": birdart.OVERLAY_PORT,
+                "platesPort": birdart.GALLERY_PORT,
                 "birdnetPort": birdnet_port,
                 "version": __version__,
                 "windowedModes": [k for k, m in MODES.items() if m.windowed],
