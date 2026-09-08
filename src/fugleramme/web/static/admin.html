@@ -9,7 +9,7 @@
 <body>
 <header>
   <h1>Fugleramme</h1>
-  <nav><a href="/">Kiosk</a><a id="birdnet" href="#" title="detection &amp; stats">BirdNET-Go</a><a href="$docs_url" target="_blank" rel="noopener">Docs</a></nav>
+  <nav><a href="/">Kiosk</a><a id="birdnet" href="#" title="detection &amp; stats">BirdNET-Go</a><a id="plates" href="#" title="review, rebuild and share the plates the bot has drawn">Plates</a><a href="$docs_url" target="_blank" rel="noopener">Docs</a></nav>
 </header>
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-tab="settings">Display</button>
@@ -64,6 +64,7 @@
   <h2>AI images</h2>
   <form class="block" method="post" action="/admin">
     $birdart_field
+    <p class="hint"><a id="gallery" href="#">Review and rebuild the plates the bot has drawn &rarr;</a></p>
     <button type="submit">Save</button>
   </form>
   <h2>System</h2>

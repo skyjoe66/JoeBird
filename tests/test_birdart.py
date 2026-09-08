@@ -56,6 +56,9 @@ def test_the_key_never_reaches_the_page(tmp_path, source, monkeypatch):
     assert 'name="openai_model" value="gpt-image-2"' in page
     assert 'name="gemini_model" value="imagen-4.0-generate-001"' in page
     assert birdart.MODEL_DOCS["openai"] in page and birdart.MODEL_DOCS["gemini"] in page
+    # the gallery links: in the nav and in the section, resolved by admin.js from the config blob
+    assert 'id="plates"' in page and 'id="gallery"' in page
+    assert f'"platesPort": {birdart.OVERLAY_PORT}' in page
 
 
 def test_the_section_renders_with_no_settings_file_at_all(tmp_path, source, monkeypatch):

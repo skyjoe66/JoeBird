@@ -6,6 +6,11 @@ const cfg = JSON.parse(document.getElementById("config").textContent);
 document.getElementById("birdnet").href = cfg.birdnetPort
   ? location.protocol + "//" + location.hostname + ":" + cfg.birdnetPort + "/"
   : cfg.birdnetUrl;
+// The bot's gallery lives on its own port; same host as this page.
+for (const id of ["plates", "gallery"]) {
+  const a = document.getElementById(id);
+  if (a) a.href = location.protocol + "//" + location.hostname + ":" + cfg.platesPort + "/birdart/gallery";
+}
 
 // Every button posts and redirects, so a save reloads: the tab and the scroll
 // position have to be carried across by hand.
