@@ -42,6 +42,34 @@ def _paper_colour(a: np.ndarray) -> np.ndarray:
     return np.median(edge, axis=0)
 
 
+def _is_chroma(paper: np.ndarray) -> bool:
+    """A saturated green backdrop (what Gemini is asked for, since it cannot
+    return transparency), as opposed to any shade of paper."""
+    r, g, b = (float(v) for v in paper)
+    return g - max(r, b) > 100
+
+
+def _despill(a: np.ndarray, paper: np.ndarray, fg: np.ndarray) -> np.ndarray:
+    """Return the bird's pixels with the backdrop's green taken out of them.
+
+    Anti-aliased edges blend the plumage with the backdrop, and a pocket the
+    silhouette encloses (between the legs) is pure backdrop that fill_holes
+    made part of the bird. On an ivory plate both simply look like paper, so
+    that is what they become here: an enclosed backdrop pocket is painted the
+    halo's paper colour, and a green-tinged edge pixel has its green pulled
+    down to its other channels. Natural greens (grass, olive plumage) have far
+    less green dominance than a blend with #00FF00 and are left alone.
+    """
+    rgb = a.copy()
+    pocket = fg & (np.sqrt(((a - paper) ** 2).sum(axis=2)) < 120)
+    rgb[pocket] = PAPER
+    r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    other = np.maximum(r, b)
+    spill = fg & ~pocket & (g - other > 60)
+    rgb[spill, 1] = other[spill]
+    return rgb
+
+
 def cut(img: Image.Image, tol: int | None = None, halo_px: int = HALO_PX) -> Image.Image:
     """RGB crop in, RGBA cut-out with halo out.
 
@@ -168,6 +196,9 @@ def _attempt(a: np.ndarray, tol: int, halo_px: int) -> Image.Image:
     fill = halo.sum() / max(1, bbox_area)
     if fill > MAX_FILL:
         raise CutoutError(f"silhouette fills {fill:.0%} of its box - a rectangle, not a bird")
+
+    if _is_chroma(paper):
+        a = _despill(a, paper, fg)
 
     out = np.zeros((*fg.shape, 4), dtype=np.uint8)
     out[halo] = (*PAPER, 255)  # halo ring, opaque paper colour

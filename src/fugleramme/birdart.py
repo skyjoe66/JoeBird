@@ -35,7 +35,7 @@ MODEL_DOCS = {
     "openai": "https://platform.openai.com/docs/models",
     "gemini": "https://ai.google.dev/gemini-api/docs/models",
 }
-DEFAULT_MODEL = {"openai": "gpt-image-2", "gemini": "imagen-4.0-generate-001"}
+DEFAULT_MODEL = {"openai": "gpt-image-2", "gemini": "gemini-3.1-flash-image"}
 QUALITIES = ("low", "medium", "high")
 BACKGROUNDS = (("transparent", "transparent"), ("flat", "flat ivory"), ("paper", "textured paper"))
 KEYS = ("openai_api_key", "gemini_api_key")
@@ -43,7 +43,7 @@ KEYS = ("openai_api_key", "gemini_api_key")
 DEFAULTS: dict[str, Any] = {
     "provider": "openai",
     "openai_model": "gpt-image-2",
-    "gemini_model": "imagen-4.0-generate-001",
+    "gemini_model": "gemini-3.1-flash-image",
     "quality": "high",
     "attempts": 2,
     "background": "transparent",

@@ -95,3 +95,8 @@ dev = [
 docs = [
     "mkdocs-material>=9.5",
 ]
+
+[tool.pytest.ini_options]
+# The frame's suite only. The bot's live tests under birdart/tests need its own
+# venv (google-genai) and spend API credit; they are run by hand from there.
+testpaths = ["tests"]

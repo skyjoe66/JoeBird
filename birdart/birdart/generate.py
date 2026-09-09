@@ -121,6 +121,18 @@ _FLAT_PAPER = (
     "* No paper grain, no aging, no mottling, no texture and no vignette in the "
     "background - keep it a single uniform colour.\n"
 )
+# Gemini cannot return transparency, and flat ivory is fatal for a white bird:
+# the cut-out keys on the border colour, so a White Ibis lost its head, neck
+# and breast to the paper (2026-09-08). A saturated green is far from any
+# plumage, so the tightest tolerance lifts it cleanly and the bird stays whole.
+_CHROMA_KEY = (
+    "\n\nBackground:\n\n"
+    "* Place the bird and the few elements at its feet on a plain, perfectly "
+    "flat, uniform bright green (#00FF00) backdrop, as for chroma keying.\n"
+    "* No paper, no margins, no texture, no gradient, no vignette and no shadow "
+    "on the backdrop - one solid colour edge to edge.\n"
+    "* Keep the bird's own colours natural; no green cast on its plumage.\n"
+)
 
 
 def _body(common: str, scientific: str) -> str:
@@ -195,10 +207,12 @@ def _generate_openai(common: str, scientific: str, dest: Path) -> Path:
 
 
 def _generate_gemini(common: str, scientific: str, dest: Path) -> Path:
-    """Imagen through the google-genai SDK. Imagen has no transparent output, so
-    the flat-paper wording is used and the cut-out lifts the paper as it does
-    for a refused OpenAI transparency. Wired and settable; not yet exercised
-    against a live key here."""
+    """Gemini image models through the google-genai SDK. They have no
+    transparent output, so the bird is asked for on a chroma-green backdrop and
+    the cut-out lifts that instead of paper. Verified live (2026-09-08); image
+    models have no free-tier quota, so the key's project needs billing enabled.
+    The imagen-* branch only works on Google's Enterprise platform, not with a
+    developer key."""
     try:
         from google import genai
         from google.genai import types
@@ -208,7 +222,7 @@ def _generate_gemini(common: str, scientific: str, dest: Path) -> Path:
     if not key:
         raise GenerateError("no Gemini API key - set one in the admin page's AI images section")
     model = settings.model()
-    prompt = _body(common, scientific) + _FLAT_PAPER
+    prompt = _body(common, scientific) + _CHROMA_KEY
     dest.parent.mkdir(parents=True, exist_ok=True)
     try:
         client = genai.Client(api_key=key)

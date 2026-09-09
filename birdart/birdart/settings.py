@@ -25,7 +25,7 @@ NOTES = STATE / "notes.json"
 PROVIDERS = ("openai", "gemini")
 QUALITIES = ("low", "medium", "high")
 BACKGROUNDS = ("transparent", "flat", "paper")
-DEFAULT_MODEL = {"openai": "gpt-image-2", "gemini": "imagen-4.0-generate-001"}
+DEFAULT_MODEL = {"openai": "gpt-image-2", "gemini": "gemini-3.1-flash-image"}
 
 
 def _file() -> dict[str, Any]:
